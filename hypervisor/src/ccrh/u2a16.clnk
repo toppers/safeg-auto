@@ -1,0 +1,2 @@
+-start=reset,.text,.const,.data/00000000,reset_bankc/00800000,.lbss3.bss/FDC00000, .lbss2.bss/FDA00000, .lbss1.bss/FD800000, .lbss0.bss/FD600000, .cbss0.bss/FE000000,.cbss1.bss/FE100000,.data.R,.bss/FE400000
+-rom=.data=.data.R

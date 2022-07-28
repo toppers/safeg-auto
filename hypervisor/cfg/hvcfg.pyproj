@@ -1,0 +1,90 @@
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>014f471b-b885-4616-8567-e751f72d5f99</ProjectGuid>
+    <ProjectHome>.</ProjectHome>
+    <StartupFile>__main__.py</StartupFile>
+    <SearchPath>
+    </SearchPath>
+    <WorkingDirectory>..\..\..\svn\prg\test\obj_1pe</WorkingDirectory>
+    <OutputPath>.</OutputPath>
+    <Name>hvcfg</Name>
+    <RootNamespace>hvcfg</RootNamespace>
+    <IsWindowsApplication>False</IsWindowsApplication>
+    <LaunchProvider>Standard Python launcher</LaunchProvider>
+    <EnableNativeCodeDebugging>False</EnableNativeCodeDebugging>
+    <CommandLineArguments>-dir gen_ghs -target ../../../../RH850_hv/hypervisor/src/cfg_u2a16.yaml -cfg sample1.yaml</CommandLineArguments>
+    <InterpreterId>Global|PythonCore|3.8</InterpreterId>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+    <DebugSymbols>true</DebugSymbols>
+    <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <DebugSymbols>true</DebugSymbols>
+    <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="cfg.py" />
+    <Compile Include="parse_base.py" />
+    <Compile Include="parse_hv.py" />
+    <Compile Include="parse_util.py" />
+    <Compile Include="cfg_core.py" />
+    <Compile Include="def_cfg.py" />
+    <Compile Include="cfg_hv.py" />
+    <Compile Include="cfg_hvc.py" />
+    <Compile Include="cfg_hvint.py" />
+    <Compile Include="cfg_inthandler.py" />
+    <Compile Include="def_cfg_kw.py" />
+    <Compile Include="cfg_mcu.py" />
+    <Compile Include="cfg_mem.py" />
+    <Compile Include="cfg_vcom_msgq.py" />
+    <Compile Include="cfg_schedule.py" />
+    <Compile Include="cfg_vcom_sbuf.py" />
+    <Compile Include="cfg_vcom_svar.py" />
+    <Compile Include="cfg_tdma.py" />
+    <Compile Include="cfg_timewin.py" />
+    <Compile Include="cfg_vcom.py" />
+    <Compile Include="cfg_vcom_base.py" />
+    <Compile Include="cfg_vm.py" />
+    <Compile Include="enum_util.py" />
+    <Compile Include="error.py" />
+    <Compile Include="gen_hvc_cfg_h.py" />
+    <Compile Include="gen_hv_cfg_asm.py" />
+    <Compile Include="gen_hv_cfg_c.py" />
+    <Compile Include="gen_hv_cfg_h.py" />
+    <Compile Include="def_global.py" />
+    <Compile Include="hvcfg.py" />
+    <Compile Include="out_util.py" />
+    <Compile Include="params.py" />
+    <Compile Include="parse_target.py" />
+    <Compile Include="parse_tdma.py" />
+    <Compile Include="parse_vcom.py" />
+    <Compile Include="parse_vm.py" />
+    <Compile Include="textwriter.py" />
+    <Compile Include="yaml_node.py" />
+    <Compile Include="__main__.py" />
+    <Compile Include="parse.py" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include=".pylintrc" />
+    <Content Include="mypy.ini" />
+  </ItemGroup>
+  <ItemGroup>
+    <InterpreterReference Include="Global|PythonCore|3.10" />
+    <InterpreterReference Include="Global|PythonCore|3.6" />
+    <InterpreterReference Include="Global|PythonCore|3.7" />
+    <InterpreterReference Include="Global|PythonCore|3.8" />
+    <InterpreterReference Include="Global|PythonCore|3.9" />
+  </ItemGroup>
+  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
+  <!-- Uncomment the CoreCompile target to enable the Build command in
+       Visual Studio and specify your pre- and post-build commands in
+       the BeforeBuild and AfterBuild targets below. -->
+  <!--<Target Name="CoreCompile" />-->
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+</Project>

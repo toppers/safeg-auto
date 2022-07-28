@@ -1,0 +1,2 @@
+-start=reset,.text,.const,.data/00000000, .lbss1.bss/FD800000, .lbss0.bss/FD600000, .cbss0.bss/FE000000, .data.R,.bss.bss/FE400000
+-rom=.data=.data.R

@@ -1,0 +1,32 @@
+#
+#  ターゲットの定義
+#
+include ../../Makefile.config
+
+#
+#  アプリケーション名
+#
+APPLNAME = sample1_vm1
+
+#
+#  ターゲットのコンフィギュレーション
+#
+LDSCRIPT = ./u2a_pe1_vm1
+CDEFS := $(CDEFS) -DPE1_ONLY
+CDEFS := $(CDEFS) -DHWC_USE_UNIT1
+CDEFS := $(CDEFS) -DRLIN3_PORT_NO=$(RLIN3_PORT0)
+CDEFS := $(CDEFS) -DOMIT_CLOCK_INIT
+CDEFS := $(CDEFS) -DOMIT_PORT_INIT
+ifeq ($(TARGET),renesas_rcar_s4)
+  CDEFS := $(CDEFS) -DTARGET_RCARS4
+endif
+
+OBJNAME = atk2-sc1_vm1
+
+ifeq ($(COMPILER),GHS)
+include ../Makefile.ghs
+endif
+
+ifeq ($(COMPILER),CCRH)
+include ../Makefile.ccrh
+endif

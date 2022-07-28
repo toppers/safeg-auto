@@ -1,0 +1,107 @@
+#ifndef COMMON_INLINE_SYMBOL_H
+#define COMMON_INLINE_SYMBOL_H
+
+/* tool_stddef.h */
+#pragma inline sil_reb_mem
+#pragma inline sil_wrb_mem
+#pragma inline sil_reh_mem
+#pragma inline sil_wrh_mem
+#pragma inline sil_rew_mem
+#pragma inline sil_wrw_mem
+
+/* rh850.h */
+#pragma inline disable_ei
+#pragma inline enable_ei
+#pragma inline set_pmr
+#pragma inline get_pmr
+#pragma inline x_set_ipm
+#pragma inline set_psw
+#pragma inline get_psw
+#pragma inline set_pswh
+#pragma inline get_pswh
+#pragma inline set_fepswh
+#pragma inline set_fepc
+#pragma inline set_fepsw
+#pragma inline set_plmr
+#pragma inline x_set_exipm
+#pragma inline set_intcfg
+#pragma inline get_intcfg
+#pragma inline set_mpm
+#pragma inline set_mpcfg
+#pragma inline get_mpcfg
+#pragma inline set_mpidx
+#pragma inline set_mpla
+#pragma inline set_mpua
+#pragma inline set_mpat
+#pragma inline get_mpat
+#pragma inline set_mca
+#pragma inline set_mcs
+#pragma inline set_mcc
+#pragma inline get_mcr
+#pragma inline set_mci
+#pragma inline set_gmcfg
+#pragma inline get_gmcfg
+#pragma inline set_ebase
+#pragma inline get_peid
+#pragma inline set_spid
+#pragma inline get_spid
+#pragma inline get_eiic
+#pragma inline halt
+#pragma inline set_hvcfg
+#pragma inline set_icctrl
+#pragma inline get_icctrl
+#pragma inline start_tscount
+#pragma inline stop_tscount
+#pragma inline get_tscount
+#pragma inline set_pmgmctrl
+#pragma inline get_pmcount
+#pragma inline set_pmcount
+#pragma inline start_pmcount
+#pragma inline stop_pmcount
+     
+/* u2a.h */
+#pragma inline set_ihvcfg
+#pragma inline ostm_pause
+#pragma inline ostm_continue
+#pragma inline tptmi_seteiint
+#pragma inline tptmi_start
+#pragma inline tptmi_stop
+#pragma inline tptmi_restart
+#pragma inline tptmi_clearint
+#pragma inline tptmi_enaint
+#pragma inline tptmi_setcnt
+#pragma inline tptmi_setdiv
+#pragma inline tptmu_set_cmp
+#pragma inline tptmu_get_cmp
+#pragma inline tptmu_start
+#pragma inline tptmu_stop
+#pragma inline tptmu_restart
+#pragma inline tptmu_enaint
+#pragma inline tptmu_setdiv
+#pragma inline tptmu_getcnt
+#pragma inline msr_enable_taud0
+#pragma inline msr_enable_tauj0
+#pragma inline msr_enable_tauj1
+#pragma inline msr_enable_tauj2
+#pragma inline msr_enable_tauj3
+#pragma inline msr_enable_uart
+#pragma inline msr_enable_ostm
+#pragma inline msr_enable_rscan
+#pragma inline set_tauj23_clk
+#pragma inline TryLockIVC
+#pragma inline UnLockIVC
+#pragma inline IsLockedIVC
+#pragma inline boot_core
+
+/* perf.h */
+#pragma inline perf_init
+#pragma inline perf_start
+#pragma inline perf_sysint_pass
+#pragma inline perf_hvint_delay
+#pragma inline perf_twint_oh
+#pragma inline perf_start_allvm_pcnt
+#pragma inline perf_end_allvm_pcnt
+#pragma inline perf_end_allvm_pcnt_val
+
+#endif /* COMMON_INLINE_SYMBOL_H */
+

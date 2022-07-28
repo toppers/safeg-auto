@@ -1,0 +1,1 @@
+-start=RESET,EIINTTBL,.const,.INIT_DSEC.const,.INIT_BSEC.const,.text,.data/00100000,.lbss.bss/FDC04000,.data.R,.bss,.stack.bss/FE020000

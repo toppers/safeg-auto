@@ -1,0 +1,109 @@
+HV:
+ LeaderCoreID:          0       #リーダコアのコアID
+ #使用するホストエントリMPUの個数
+ NumberOfHostEntryMPU:  4 #32以下か
+ CRAMUsageSize:
+  - {ID: 0, Size: 0x0007ffff}  #下位ビットから連続した1でなければならない
+ HVCall:
+  - {Name : hvc_test0, NumberOfArg : 0} #NumberOfArg省略時は0
+  - {Name : hvc_test1, NumberOfArg : 1}
+  - {Name : hvc_test2, NumberOfArg : 2}
+  - {Name : hvc_test3, NumberOfArg : 3}
+ Cores:
+  - ID:             0
+    SPID:           0
+    StackSizeHV:    1024
+    StackSizeHVTW:  1024
+    SingleVMCORE:   false
+    MemorySection:
+     CCB       : .lbss0
+     HVTWDCB   : .lbss0
+     VMCB      : .lbss0
+     StackHV   : .lbss0
+     StackHVTW : .cbss0
+    Interrupt : #HV割込み
+     - {IntNo : 380, IntHandler : hvint0_handler, Priority : 9, Enable : true}  #Enable省略時はFalse
+     - {IntNo : 709, IntHandler : twdint_handler, Priority : 9, Enable : true}
+
+  - ID:             1
+    SPID:           1
+    StackSizeHV:    1024
+    StackSizeHVTW:  1024
+    SingleVMCORE:   false
+    MemorySection:
+     CCB       : .lbss1
+     HVTWDCB   : .lbss1
+     VMCB      : .lbss1
+     StackHV   : .lbss1
+     StackHVTW : .cbss1
+    Interrupt :
+     - {IntNo : 381, IntHandler : hvint0_handler, Priority : 9, Enable : true}
+     - {IntNo : 719, IntHandler : twdint_handler, Priority : 9, Enable : true}
+
+VM:
+ - Name:      VM0_0
+   CoreID:    0
+   RestBase:  0x00100000
+   Memory:
+    - {Base: 0x00100000, Size: 0x00100000, Type: rom} # Type は all or rom or ram or peri
+    - {Base: 0xfdc04000, Size: 0x00004000, Type: ram}
+    - {Base: 0xfe020000, Size: 0x00010000, Type: ram}
+    - {Base: 0xff000000, Size: 0x01000000, Type: peri}
+   SPID:      4  
+   SPIDList:  [4]
+   Interrupt: #VM割込み 数値のみ指定可能
+    - 199 #OSTM0_INTNO
+    - 707
+ - Name:      VM0_1
+   CoreID:    0
+   RestBase:  0x00200000
+   Memory:
+    - {Base: 0x00200000, Size: 0x00100000, Type: rom}
+    - {Base: 0xfdc08000, Size: 0x00004000, Type: ram}
+    - {Base: 0xfe030000, Size: 0x00010000, Type: ram}
+    - {Base: 0xff000000, Size: 0x01000000, Type: peri}
+   SPID:      5
+   SPIDList:  [5]
+   Interrupt:
+    - 200 #OSTM1_INTNO
+    - 708
+ - Name:      VM1_0
+   CoreID:    1
+   RestBase:  0x00500000
+   Memory:
+    - {Base: 0x00500000, Size: 0x00100000, Type: rom}
+    - {Base: 0xfda04000, Size: 0x00004000, Type: ram}
+    - {Base: 0xfe040000, Size: 0x00010000, Type: ram}
+    - {Base: 0xff000000, Size: 0x01000000, Type: peri}
+   SPID:      6
+   SPIDList:  [6]
+   Interrupt:
+    - 201 #OSTM2_INTNO
+    - 717
+ - Name:      VM1_1
+   CoreID:    1
+   RestBase:  0x00600000
+   Memory:
+    - {Base: 0x00600000, Size: 0x00100000, Type: rom}
+    - {Base: 0xfda08000, Size: 0x00004000, Type: ram}
+    - {Base: 0xfe050000, Size: 0x00010000, Type: ram}
+    - {Base: 0xff000000, Size: 0x01000000, Type: peri}
+   SPID:      7
+   SPIDList:  [7]
+   Interrupt:
+    - 202 #OSTM3_INTNO
+    - 718
+
+TDMA:
+ SystemIntervalUS: 10000000
+ ScheduleTable:
+  - CoreID: 0
+    TimeWindow:
+     - {Type: VM, VMName: VM0_0, DurationUS: 4000000, TwtgIntNo: 707, TwtgIntInterval: 1}
+     - {Type: VM, VMName: VM0_1, DurationUS: 2000000, TwtgIntNo: 708, TwtgIntInterval: 2} #TwtgIntNo は省略可能，TwtgIntInterval省略時は1
+     - {Type: HV,                DurationUS: 1500000, TwtgIntNo: 709, TwtgIntInterval: 1} #HVタイムウィンドウの場合はVMIDなし
+  - CoreID: 1
+    TimeWindow:
+     - {Type: VM, VMName: VM1_0, DurationUS: 4000001, TwtgIntNo: 717, TwtgIntInterval: 1}
+     - {Type: VM, VMName: VM1_1, DurationUS: 2000001, TwtgIntNo: 718, TwtgIntInterval: 2}
+     - {Type: HV,                DurationUS: 1500001, TwtgIntNo: 719, TwtgIntInterval: 1}

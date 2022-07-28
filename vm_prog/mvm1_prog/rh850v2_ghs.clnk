@@ -1,0 +1,2 @@
+-start=RESET,EIINTTBL,.const,.INIT_DSEC.const,.INIT_BSEC.const,.text,.data/00200000,.data.R,.bss,.stack.bss/FE040000
+-rom=.data=.data.R

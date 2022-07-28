@@ -1,0 +1,223 @@
+#
+#  HV名
+#
+TARGET_NAME = hypervisor
+
+#
+#  コンパイル対象のオブジェクト指定
+#
+HV_COBJS := $(HV_COBJS) hv_impl.o startup.o hv_service.o vmcom.o
+HV_ASMOBJS := $(HV_ASMOBJS) hv_support.o vector.o
+COMMON_COBJS := $(COMMON_COBJS) syslog.o
+
+ifeq ($(USE_IVCCOM),true)
+  HV_COBJS := $(HV_COBJS) ivccom_cfg.o ivccom.o
+endif
+
+COBJS = hv_cfg.o $(HV_COBJS) $(USER_COBJS) $(COMMON_COBJS)
+ASMOBJS = $(HV_ASMOBJS) $(USER_ASMOBJS) $(COMMON_ASMOBJS)
+
+#
+#  デバッグ出力を有効に
+#
+ifeq ($(ENABLE_DEBUGOUT), true)
+  CFLAGS := $(CFLAGS) -DENABLE_DEBUGOUT
+endif
+
+#
+#  各種ディレクトリ
+#
+COMMON_DIR   = $(TOP_DIR)/../common
+SRC_DIR      = $(TOP_DIR)/src
+LIBGUEST_DIR = $(TOP_DIR)/libguest
+INCLUDE_DIR  = $(TOP_DIR)/include
+OBJDIR       = objs
+DEPDIR       = objs
+
+vpath %.c   $(COMMON_DIR) $(SRC_DIR) $(TARGETDIR)
+vpath %.S   $(COMMON_DIR) $(SRC_DIR) $(TARGETDIR)
+vpath %.asm $(COMMON_DIR) $(SRC_DIR) $(TARGETDIR)
+
+COBJS    := $(addprefix $(OBJDIR)/, $(COBJS))
+ASMOBJS  := $(addprefix $(OBJDIR)/, $(ASMOBJS))
+
+ALL_OBJS := $(COBJS) $(ASMOBJS)
+
+#
+#  インクルードディレクトリ
+#
+INCLUDES := $(INCLUDES) -I. -I$(COMMON_DIR) -I$(SRC_DIR) -I$(TARGETDIR) -I$(LIBGUEST_DIR) -I$(INCLUDE_DIR)
+
+#
+#  ビルドルール
+#
+all: $(TARGET_NAME).elf
+
+clean: compiler_clean cfg_clean
+	rm -f $(TARGET_NAME).elf $(COBJS) $(ASMOBJS) 
+
+#
+#   GHS用の定義
+#
+ifeq ($(COMPILER),GHS)
+
+#
+#  コンパイラ依存のインクルードディレクトリ
+#
+INCLUDES := -I$(COMMON_DIR)/ghs -I$(SRC_DIR)/ghs $(INCLUDES) 
+
+#
+#  コンパイルオプション
+#
+CC = ccrh850.exe
+CFLAGS := $(CFLAGS) -Ospeed -Omax -Ointerproc 
+#CFLAGS := $(CFLAGS) -Osize
+CFLAGS := $(CFLAGS) -cpu=rh850g4mh
+CFLAGS := $(CFLAGS) -ansi -preprocess_assembly_files \
+         -srec -kanji=euc -noobj \
+         -no_callt -prepare_dispose \
+         -registermode=32 -keeptempfiles \
+         --no_commons -dual_debug -G\
+         -sda=all -reserve_r2 -large_sda
+CFLAGS := $(CFLAGS) -MD
+
+CFLAGS := $(CFLAGS) $(INCLUDES)
+
+#
+#  リンカオプション
+#
+LDFLAGS := $(LDFLAGS) -Wl,-append
+LDFLAGS := $(LDFLAGS) -e _Bootup -nostartfiles $(CFLAGS)
+LDFLAGS := -L $(OBJDIR) $(LDFLAGS) 
+
+#
+#  依存関係ファイルのインクルード
+#
+-include $(DEPDIR)/*.d
+
+#
+#  ビルドルール
+#
+$(TARGET_NAME).elf : $(ALL_OBJS) 
+	$(CC) $(ALL_OBJS) $(LDFLAGS) -T $(GHS_LDSCRIPT) -MF $(DEPDIR)/$*.d -o $(TARGET_NAME).elf
+
+$(ASMOBJS): $(OBJDIR)/%.o: %.S
+	${MKOBJDIR_P}
+	$(CC) -c -o $@ $(CFLAGS) -MF $(DEPDIR)/$*.d $<
+
+$(COBJS): $(OBJDIR)/%.o: %.c
+	${MKOBJDIR_P}
+	$(CC) -c -o $@ $(CFLAGS) -MF $(DEPDIR)/$*.d $<
+
+compiler_clean:
+	rm -f $(OBJDIR)/*.si $(OBJDIR)/*.dla $(OBJDIR)/*.dnm $(OBJDIR)/*.s $(OBJDIR)/*.inf \
+          $(OBJDIR)/*.dbo $(OBJDIR)/*.run $(OBJDIR)/*.o \
+          $(DEPDIR)/*.d $(DEPDIR)/*.dep \
+          $(TARGET_NAME).map $(TARGET_NAME).dla $(TARGET_NAME).dnm $(TARGET_NAME).run $(TARGET_NAME).dep
+
+#
+#  コンフィギュレータのコンパイルオプション
+#
+CFG_COMPILER = ghs
+
+endif
+
+#
+#   CCRH用の定義
+#
+ifeq ($(COMPILER),CCRH)
+
+#
+#  コンパイラ依存のインクルードディレクトリ
+#
+INCLUDES := -I$(COMMON_DIR)/ccrh -I$(SRC_DIR)/ccrh $(INCLUDES) 
+
+#
+#  コンパイラとコンパイルオプション
+#
+CC = ccrh
+LINK = rlink
+
+CFLAGS := $(CFLAGS) -Ospeed -Oinline_size
+CFLAGS := $(CFLAGS) -Xcpu=g4mh
+CFLAGS := $(CFLAGS) -g -g_line -Xreserve_r2 -Xdbl_size=4 -use_recipf -lang=c99 -Xalign4=all -Xinline_strcpy
+CFLAGS := $(CFLAGS) -Xfloat=fpu
+CFLAGS := $(CFLAGS) -Xno_warning=50013 -Xno_warning=11183
+
+CFLAGS := $(CFLAGS) -DCOMPILER_CCRH
+
+CFLAGS := $(CFLAGS) $(INCLUDES)
+
+
+ASMFLAGS := $(ASMFLAGS) 
+ASMFLAGS := $(ASMFLAGS) $(INCLUDES)
+
+
+#
+#  リンカスクリプトオプション
+#
+LDFLAGS := $(LDFLAGS) -debug -nocompress -NOOPtimize -show=symbol -memory=high -nologo 
+
+#
+#  ビルドルール
+#
+$(TARGET_NAME).elf : $(ALL_OBJS)
+	$(LINK) $(LDFLAGS) -subcommand=$(CCRH_LDSCRIPT) -output=$(TARGET_NAME).elf -list=$(TARGET_NAME).map $(ALL_OBJS)
+
+$(ASMOBJS): $(OBJDIR)/%.o: %.asm
+	${MKOBJDIR_P}
+	$(CC) -c -o$@ $(CFLAGS)  $<
+
+$(COBJS): $(OBJDIR)/%.o: %.c
+	${MKOBJDIR_P}
+	$(CC) -c -o$@ $(CFLAGS) $<
+
+$(COBJS:$(OBJDIR)/%.o=%.asm): %.asm: %.c
+	${MKOBJDIR_P}
+	$(CC) -S $(CFLAGS) $<
+
+compiler_clean:
+	rm -f $(TARGET_NAME).map
+
+#
+#  コンフィギュレータのコンパイルオプション
+#
+CFG_COMPILER = ccrh
+
+endif
+
+#
+#  コンフィギュレータ
+#
+hv_cfg.c : $(CFG_INPUT) $(TARGET_CFG)
+	python3 ../../cfg -comp $(CFG_COMPILER) -cfg $(CFG_INPUT) -target $(TARGET_CFG)
+
+cfg_clean:
+	rm -f hv_cfg.h hv_cfg.c hvc_cfg.h hv_cfg_asm.h hv_cfg_asm.inc
+
+#
+#  プラットホームの判定
+#
+ifneq (,$(findstring /cygdrive/,$(PATH)))
+    UNAME := Cygwin
+else
+ifneq (,$(findstring /c/,$(PATH)))
+    UNAME := Cygwin
+else
+ifeq ($(OS),Windows_NT)
+    UNAME := Windows
+else
+#UNIX系
+UNAME := $(shell uname)
+endif
+endif
+endif
+
+#
+#  オブジェクトフォルダの生成
+#
+ifeq ($(UNAME), Windows)
+	MKOBJDIR_P =  if not exist $(OBJDIR) ( mkdir $(OBJDIR))
+else
+	MKOBJDIR_P = @[ -d $(OBJDIR) ] || mkdir -p $(OBJDIR)
+endif

@@ -1,0 +1,31 @@
+#
+#  Renesas-T1V1依存部のMakefile定義
+#
+
+#
+#  ビルド対象のファイル
+#
+HV_COBJS := $(HV_COBJS) u2a.o target_hv_impl.o 
+HV_ASMOBJS := $(HV_ASMOBJS) rvector_pe01.o rvector_pe23.o start.o start_u2a16.o
+
+#
+#  ターゲット毎の定義の使用
+#
+CFLAGS := $(CFLAGS) -DRLIN3_PORT0=$(RLIN3_PORT0) -DRLIN3_PORT1=$(RLIN3_PORT1) \
+						-DRLIN3_PORT2=$(RLIN3_PORT2) -DRLIN3_PORT3=$(RLIN3_PORT3)
+
+#
+#  コンフィギュレータのターゲット依存の設定ファイル
+#
+TARGET_CFG = $(TOP_DIR)/src/cfg_u2a16.yaml
+
+#
+#  標準のリンカスクリプト
+#
+ifndef GHS_LDSCRIPT
+  GHS_LDSCRIPT = $(TOP_DIR)/src/ghs/u2a16.ld
+endif
+
+ifndef CCRH_LDSCRIPT
+  CCRH_LDSCRIPT = $(TOP_DIR)/src/ccrh/u2a16.clnk
+endif

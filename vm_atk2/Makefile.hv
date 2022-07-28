@@ -1,0 +1,4 @@
+#
+#  追加のインクルードディレクトリ
+#
+INCLUDES := -I../../hypervisor/obj/obj_1pe_atk2

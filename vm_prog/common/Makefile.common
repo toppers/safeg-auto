@@ -1,0 +1,183 @@
+#
+#  ディレクトリの指定
+#
+COMMON_DIR = $(TOP_DIR)/common
+HVGUEST_DIR = $(TOP_DIR)/hypervisor/libguest/
+HVTARGET_DIR = $(TOP_DIR)/hypervisor/target/$(TARGET)/
+OBJDIR = objs
+DEPDIR = objs
+
+#
+#  性能評価時のフラグ
+#
+ifeq ($(MODE),perf)
+CFLAGS += -DENABLE_PERF 
+CFLAGS += -DENABLE_PERF_HVINT
+endif
+
+COBJS    += u2a.o syslog.o
+ASMOBJS  += int.o hvc_asm.o start.o
+
+vpath %.c   $(COMMON_DIR) $(SRC_DIR) $(HVGUEST_DIR) $(COMMON_COMPILER_DIR)
+vpath %.S   $(COMMON_DIR) $(SRC_DIR) $(HVGUEST_DIR) $(COMMON_COMPILER_DIR)
+vpath %.asm $(COMMON_DIR) $(SRC_DIR) $(HVGUEST_DIR) $(COMMON_COMPILER_DIR)
+
+COBJS    := $(addprefix $(OBJDIR)/, $(COBJS))
+ASMOBJS  := $(addprefix $(OBJDIR)/, $(ASMOBJS))
+
+ALL_OBJS := $(COBJS) $(ASMOBJS)
+
+#
+#  インクルードディレクトリ
+#
+INCLUDES := $(INCLUDES) -I$(COMMON_DIR) -I$(HVGUEST_DIR) -I$(HVTARGET_DIR)
+
+#
+#  ビルドルール
+#
+all: $(TARGET_NAME).elf
+
+clean: compiler_clean
+	rm -f $(TARGET_NAME).elf $(COBJS) $(ASMOBJS) 
+
+#
+#   GHS用の定義
+#
+ifeq ($(COMPILER),GHS)
+
+#
+#  コンパイラ依存のインクルードディレクトリ
+#
+INCLUDES := -I$(COMMON_DIR)/ghs $(INCLUDES) 
+
+#
+#  コンパイラとコンパイルオプション
+#
+CC = ccrh850
+CFLAGS := $(CFLAGS) -Ospeed -Omax -Ointerproc 
+CFLAGS := $(CFLAGS) -cpu=rh850g4mh
+CFLAGS := $(CFLAGS) -ansi -preprocess_assembly_files \
+         -srec -kanji=euc -noobj \
+         -no_callt -prepare_dispose \
+         -registermode=32 -keeptempfiles \
+         --no_commons -dual_debug -G\
+         -sda=all -reserve_r2 -large_sda
+CFLAGS := $(CFLAGS) -MD
+
+CFLAGS := $(CFLAGS) $(INCLUDES)
+
+#
+#  リンカオプション
+#
+LDFLAGS := $(LDFLAGS) -Wl,-append
+LDFLAGS := $(LDFLAGS) -e _Bootup -nostartfiles $(CFLAGS)
+LDFLAGS := -L $(OBJDIR) $(LDFLAGS) 
+
+#
+#  依存関係ファイルのインクルード
+#
+-include $(DEPDIR)/*.d
+
+#
+#  ビルドルール
+#
+$(TARGET_NAME).elf : $(ALL_OBJS)
+	$(CC) $(ALL_OBJS) $(LDFLAGS) -T $(LDSCRIPT).ld -MF $(DEPDIR)/$*.d -o $(TARGET_NAME).elf
+
+$(ASMOBJS): $(OBJDIR)/%.o: %.S
+	${MKOBJDIR_P}
+	$(CC) -c -o $@ $(CFLAGS) -MF $(DEPDIR)/$*.d $<
+
+$(COBJS): $(OBJDIR)/%.o: %.c
+	${MKOBJDIR_P}
+	$(CC) -c -o $@ $(CFLAGS) -MF $(DEPDIR)/$*.d $<
+
+compiler_clean:
+	rm -f $(OBJDIR)/*.si $(OBJDIR)/*.dla $(OBJDIR)/*.dnm $(OBJDIR)/*.s $(OBJDIR)/*.inf \
+          $(OBJDIR)/*.dbo $(OBJDIR)/*.run $(OBJDIR)/*.o \
+          $(DEPDIR)/*.d $(DEPDIR)/*.dep $(TARGET_NAME).map $(TARGET_NAME).dla $(TARGET_NAME).dnm 
+
+endif
+
+#
+#   CCRH用の定義
+#
+ifeq ($(COMPILER),CCRH)
+
+#
+#  コンパイラ依存のインクルードディレクトリ
+#
+INCLUDES := -I$(COMMON_DIR)/ccrh $(INCLUDES) 
+
+#
+#  コンパイラとコンパイルオプション
+#
+CC = ccrh
+LINK = rlink
+
+CFLAGS := $(CFLAGS) -Ospeed -Oinline_size
+CFLAGS := $(CFLAGS) -Xcpu=g4mh
+CFLAGS := $(CFLAGS) -g -g_line -Xreserve_r2 -Xdbl_size=4 -use_recipf -lang=c99
+CFLAGS := $(CFLAGS) -Xfloat=fpu
+CFLAGS := $(CFLAGS) -Xno_warning=50013 -Xno_warning=11183
+
+CFLAGS := $(CFLAGS) -DCOMPILER_CCRH
+
+CFLAGS := $(CFLAGS) $(INCLUDES)
+
+
+ASMFLAGS := $(ASMFLAGS) 
+ASMFLAGS := $(ASMFLAGS) $(INCLUDES)
+
+
+#
+#  リンカスクリプトオプション
+#
+LDFLAGS := $(LDFLAGS) -debug -nocompress -NOOPtimize -show=symbol -memory=high -nologo 
+LDFLAGS := $(LDFLAGS) -library=lib\\v850e3v5\\rhf4n.lib
+
+#
+#  ビルドルール
+#
+$(TARGET_NAME).elf : $(ALL_OBJS)
+	$(LINK) $(LDFLAGS) -subcommand=$(LDSCRIPT).clnk -output=$(TARGET_NAME).elf -list=$(TARGET_NAME).map $(ALL_OBJS) 
+
+$(ASMOBJS): $(OBJDIR)/%.o: %.asm
+	${MKOBJDIR_P}
+	$(CC) -c -o$@ $(CFLAGS)  $<
+
+$(COBJS): $(OBJDIR)/%.o: %.c
+	${MKOBJDIR_P}
+	$(CC) -c -o$@ $(CFLAGS) $<
+
+compiler_clean:
+	rm -f $(TARGET_NAME).map
+
+endif
+
+#
+#  プラットホームの判定
+#
+ifneq (,$(findstring /cygdrive/,$(PATH)))
+    UNAME := Cygwin
+else
+ifneq (,$(findstring /c/,$(PATH)))
+    UNAME := Cygwin
+else
+ifeq ($(OS),Windows_NT)
+    UNAME := Windows
+else
+#UNIX系
+UNAME := $(shell uname)
+endif
+endif
+endif
+
+#
+#  オブジェクトフォルダの生成
+#
+ifeq ($(UNAME), Windows)
+	MKOBJDIR_P =  if not exist $(OBJDIR) ( mkdir $(OBJDIR))
+else
+	MKOBJDIR_P = @[ -d $(OBJDIR) ] || mkdir -p $(OBJDIR)
+endif

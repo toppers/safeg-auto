@@ -1,0 +1,20 @@
+#
+#  U2A16
+#
+MCU: 
+  NumberOfCores: 4 #物理的なコア数
+  NumberOfINTC2Interrupt: 736  #INTC2割込みの数, INTC1は32固定
+  Memory : 
+   - {Base: 0x00000000, Size: 0x00400000, Type: rom,  ID: 0}
+   - {Base: 0x00400000, Size: 0x00400000, Type: rom,  ID: 1}
+   - {Base: 0x00800000, Size: 0x00400000, Type: rom,  ID: 2}
+   - {Base: 0x00C00000, Size: 0x00400000, Type: rom,  ID: 3}
+   - {Base: 0x08000000, Size: 0x00010000, Type: rom,  ID: 4}
+   - {Base: 0xFDC00000, Size: 0x00010000, Type: lram, ID: 0}
+   - {Base: 0xFDA00000, Size: 0x00010000, Type: lram, ID: 1}
+   - {Base: 0xFD800000, Size: 0x00010000, Type: lram, ID: 2}
+   - {Base: 0xFD600000, Size: 0x00010000, Type: lram, ID: 3}
+   - {Base: 0xFE000000, Size: 0x00080000, Type: cram, ID: 0}
+   - {Base: 0xFE100000, Size: 0x00080000, Type: cram, ID: 1}
+   - {Base: 0xFE400000, Size: 0x00200000, Type: cram, ID: 2}
+   - {Base: 0xFF000000, Size: 0x01000000, Type: peri, ID: 0}

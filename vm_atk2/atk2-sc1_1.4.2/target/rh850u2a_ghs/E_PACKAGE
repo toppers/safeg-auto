@@ -1,0 +1,10 @@
+E_PACKAGE atk2-sc1_rh850f1h_pb_ghs
+VERSION %date
+
+INCLUDE MANIFEST
+INCLUDE ../../MANIFEST
+INCLUDE ../../target/rh850f1h_pb_gcc/MANIFEST
+INCLUDE ../../arch/v850_gcc/MANIFEST
+INCLUDE ../../arch/v850_ghs/MANIFEST
+INCLUDE ../../arch/ghs/MANIFEST
+../../cfg/cfg/cfg.exe

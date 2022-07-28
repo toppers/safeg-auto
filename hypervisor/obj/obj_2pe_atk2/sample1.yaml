@@ -1,0 +1,169 @@
+HV:
+ LeaderCoreID:          0       #リーダコアのコアID
+ NumberOfHostEntryMPU:  4       #使用するホストエントリMPUの個数
+ CRAMUsageSize:
+  - {ID: 0, Size: 0x0007ffff}  #下位ビットから連続した1でなければならない
+ HVCall:
+  - {Name : hvc_test0, NumberOfArg : 0}
+  - {Name : hvc_test1, NumberOfArg : 1}
+  - {Name : hvc_test2, NumberOfArg : 2}
+  - {Name : hvc_test3, NumberOfArg : 3}
+ Cores:
+  - ID:             0
+    SPID:           0
+    StackSizeHV:    1024
+    StackSizeHVTW:  1024
+    SingleVMCORE:   false
+    MemorySection:
+     CCB       : .lbss0
+     HVTWDCB   : .lbss0
+     VMCB      : .lbss0
+     StackHV   : .lbss0
+     StackHVTW : .cbss0
+    Interrupt : #HV割込み
+     - {IntNo : 380, IntHandler : hvint0_handler, Priority : 9, Enable : true}
+     - {IntNo : 709, IntHandler : twdint_handler, Priority : 9, Enable : true}
+
+  - ID:             1
+    SPID:           1
+    StackSizeHV:    1024
+    StackSizeHVTW:  1024
+    SingleVMCORE:   false
+    MemorySection:
+     CCB       : .lbss1
+     HVTWDCB   : .lbss1
+     VMCB      : .lbss1
+     StackHV   : .lbss1
+     StackHVTW : .cbss1
+    Interrupt : #HV割込み
+     - {IntNo : 381, IntHandler : hvint0_handler, Priority : 9, Enable : true}
+     - {IntNo : 719, IntHandler : twdint_handler, Priority : 9, Enable : true}
+
+VM:
+ - Name:      VM1
+   CoreID:    0
+   RestBase:  0x00100000
+   Memory:
+    - {Base: 0x00100000, Size: 0x00100000, Type: rom} # Type は all or rom or ram or peri
+    - {Base: 0xfdc04000, Size: 0x00004000, Type: ram}
+    - {Base: 0xfe020000, Size: 0x00010000, Type: ram}
+    - {Base: 0xff000000, Size: 0x01000000, Type: peri}
+   SPID:      4  
+   SPIDList:  [4]
+   Interrupt: #VM割込み 数値のみ指定可能
+    - 418 #RLIN30_RX_INTNO
+    - 446 #RLIN37_RX_INTNO
+    - 364 #TAUJ1I0_INTNO
+    - 202 #OSTM3_INTNO
+    - 199 #OSTM0_INTNO
+    - 707
+ - Name:      VM2
+   CoreID:    0
+   RestBase:  0x00200000
+   Memory:
+    - {Base: 0x00200000, Size: 0x00100000, Type: rom}
+    - {Base: 0xfdc08000, Size: 0x00004000, Type: ram}
+    - {Base: 0xfe030000, Size: 0x00010000, Type: ram}
+    - {Base: 0xff000000, Size: 0x01000000, Type: peri}
+   SPID:      5
+   SPIDList:  [5]
+   Interrupt:
+    - 422 #RLIN31_RX_INTNO
+    - 434 #RLIN34_RX_INTNO
+    - 372 #TAUJ3I0_INTNO
+    - 200 #OSTM1_INTNO
+    - 708
+ - Name:      VM3
+   CoreID:    1
+   RestBase:  0x00500000
+   Memory:
+    - {Base: 0x00500000, Size: 0x00100000, Type: rom}
+    - {Base: 0xfda04000, Size: 0x00004000, Type: ram}
+    - {Base: 0xfe040000, Size: 0x00010000, Type: ram}
+    - {Base: 0xff000000, Size: 0x01000000, Type: peri}
+   SPID:      6
+   SPIDList:  [6]
+   Interrupt:
+    - 426 #RLIN32_RX_INTNO
+    - 360 #TAUJ0I0_INTNO
+    - 717
+ - Name:      VM4
+   CoreID:    1
+   RestBase:  0x00600000
+   Memory:
+    - {Base: 0x00600000, Size: 0x00100000, Type: rom}
+    - {Base: 0xfda08000, Size: 0x00004000, Type: ram}
+    - {Base: 0xfe050000, Size: 0x00010000, Type: ram}
+    - {Base: 0xff000000, Size: 0x01000000, Type: peri}
+   SPID:      7
+   SPIDList:  [7]
+   Interrupt:
+    - 430 #RLIN33_RX_INTNO
+    - 462 #RLIN311_RX_INTNO
+    - 368 #TAUJ2I0_INTNO
+    - 718
+TDMA:
+ SystemIntervalUS: 10000000
+ ScheduleTable:
+  - CoreID: 0
+    TimeWindow:
+     - {Type: VM, VMName: VM1, DurationUS: 4000000, TwtgIntNo: 707, TwtgIntInterval: 1}
+     - {Type: VM, VMName: VM2, DurationUS: 4000000, TwtgIntNo: 708, TwtgIntInterval: 2} #TwtgIntNo は省略可能，TwtgIntInterval省略時は1
+     - {Type: HV,              DurationUS: 1000000, TwtgIntNo: 709, TwtgIntInterval: 1} #HVタイムウィンドウの場合はVMIDなし
+  - CoreID: 1
+    TimeWindow:
+     - {Type: VM, VMName: VM3, DurationUS: 4000000, TwtgIntNo: 717, TwtgIntInterval: 1}
+     - {Type: VM, VMName: VM4, DurationUS: 4000000, TwtgIntNo: 718, TwtgIntInterval: 2}
+     - {Type: HV,              DurationUS: 1000000, TwtgIntNo: 719, TwtgIntInterval: 1}
+
+
+VCOM:
+  StateVariable:
+    - Name:       SVAR1
+      Size:       4
+      WritableVM: VM1
+      InitState:  false
+
+    - Name:       SVAR2
+      Size:       8
+      WritableVM: VM2
+      InitState:  false
+
+    - Name:       SVAR3
+      Size:       8
+      WritableVM: VM3
+      InitState:  false
+
+    - Name:       SVAR4
+      Size:       8
+      WritableVM: VM4
+      InitState:  false
+
+  MessageQueue:
+    - Name:             MSGQ1
+      MaximumSize:      8 
+      MessageQueueSize: 32
+      WritableVM:       VM1
+      ReadableVM:       VM2
+      InitState:        false
+
+    - Name:             MSGQ2
+      MaximumSize:      8
+      MessageQueueSize: 32
+      WritableVM:       VM2
+      ReadableVM:       VM3
+      InitState:        false
+
+    - Name:             MSGQ3
+      MaximumSize:      8
+      MessageQueueSize: 32
+      WritableVM:       VM3
+      ReadableVM:       VM4
+      InitState:        false
+
+    - Name:             MSGQ4
+      MaximumSize:      8
+      MessageQueueSize: 32
+      WritableVM:       VM4
+      ReadableVM:       VM1
+      InitState:        false
