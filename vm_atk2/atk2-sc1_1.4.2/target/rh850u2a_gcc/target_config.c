@@ -121,8 +121,8 @@
 #define RLIN33_PFC2_INIT	((uint16)0x0000)
 #define RLIN33_PM2_INIT		((uint16)0x8000)
 
-#define FCLACTL0_RLIN3    ((uint8_t*)0xFFED4000)
-#define FCLACTL1_RLIN3    ((uint8_t*)0xFFED4004)
+#define FCLACTL0_RLIN3    ((uint8*)0xFFED4000)
+#define FCLACTL1_RLIN3    ((uint8*)0xFFED4004)
 
 #else /* TARGET_RCARS4 */
 
