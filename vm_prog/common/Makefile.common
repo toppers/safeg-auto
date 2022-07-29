@@ -141,6 +141,7 @@ LDFLAGS := $(LDFLAGS) -library=lib\\v850e3v5\\rhf4n.lib
 #
 $(TARGET_NAME).elf : $(ALL_OBJS)
 	$(LINK) $(LDFLAGS) -subcommand=$(LDSCRIPT).clnk -output=$(TARGET_NAME).elf -list=$(TARGET_NAME).map $(ALL_OBJS) 
+	$(LINK) $(TARGET_NAME).elf -output=$(TARGET_NAME).srec -form=stype
 
 $(ASMOBJS): $(OBJDIR)/%.o: %.asm
 	${MKOBJDIR_P}

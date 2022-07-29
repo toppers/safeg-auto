@@ -163,6 +163,7 @@ LDFLAGS := $(LDFLAGS) -debug -nocompress -NOOPtimize -show=symbol -memory=high -
 #
 $(TARGET_NAME).elf : $(ALL_OBJS)
 	$(LINK) $(LDFLAGS) -subcommand=$(CCRH_LDSCRIPT) -output=$(TARGET_NAME).elf -list=$(TARGET_NAME).map $(ALL_OBJS)
+	$(LINK) $(TARGET_NAME).elf -output=$(TARGET_NAME).srec -form=stype
 
 $(ASMOBJS): $(OBJDIR)/%.o: %.asm
 	${MKOBJDIR_P}
