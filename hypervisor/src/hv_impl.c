@@ -507,7 +507,7 @@ twtgint_raise(CCB* p_my_ccb)
     /*
      *  タイムウィンドウトリガ割込みが登録されていれば
      */
-    if (p_my_ccb->p_runtwd->twtgintno != 0xFFFFFFFFFF) {
+    if (p_my_ccb->p_runtwd->twtgintno != 0xFFFFFFFF) {
         (*p_my_ccb->p_runtwd->p_twtgcnt)++;
         if (*(p_my_ccb->p_runtwd->p_twtgcnt) == p_my_ccb->p_runtwd->twtgintcyc) {
             raise_exint(p_my_ccb->p_runtwd->twtgintno);
