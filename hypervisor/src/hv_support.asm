@@ -107,13 +107,15 @@ RESTORE_VM_CONTEXT .macro
 ;/*
  ;*  パーマネントレジスタの設定
  ;*/
-SET_PERMANENT_REGISTER .macro
+SET_PERMANENT_REGISTER .macro reg1
 $ifndef __ASRH__ ;/* GHSの場合 */
     Lea    __gp, gp
     Lea    __tp, tp
 $else ;/* CCRHの場合 */
     mov   #__gp_data, gp
 $endif ;/* __ASRH__ */
+    mov HV_INIT_FPSR, reg1
+    ldsr reg1, fpsr
 .endm
 
 ;/*
@@ -121,22 +123,132 @@ $endif ;/* __ASRH__ */
  ;*/
 
     ;/*
-      ;*  未定義の割込みのエントリ
+     ;*  HVで発生するFE例外のハンドラ
       ;*/
     .cseg text
     .align 16
-    .extern int_handler 
-int_handler:
-    br int_handler
+    .extern hv_fe_handler 
+hv_fe_handler:
+    ;/* 例外ハンドラで参照するため全てのコンテキストを保存 */
+    ldsr    sp, fewr
+    pushsp r1, r31
+    stsr    fpsr, r1
+    pushsp r1, r1
+    stsr   fewr, r1       ;/* spを FEWR から復帰 */
+    pushsp r1, r1
+
+    ;/* HV FE例外ハンドラの呼び出し */
+    mov   sp, r6
+    jarl _call_hv_fe_handler, lp
+
+    popsp r1, r1    ;/* sp */
+    ldsr  r1, fewr
+    popsp r1, r1    ;/* fpsr */
+    ldsr  r1, fpsr
+    popsp r1, r31
+    stsr  fewr, sp
+
+    feret
+
 
     ;/*
-     ;*  MIPハンドラ
+     ;*  HVで発生するEI例外のハンドラ
      ;*/
     .cseg text
     .align 16
-    .extern mip_handler 
-mip_handler:
-    br mip_handler
+    .extern hv_ei_handler 
+hv_ei_handler:
+    ;/* 例外ハンドラで参照するため全てのコンテキストを保存 */
+    ldsr   sp, eiwr
+    pushsp r1, r31
+    stsr   fpsr, r1
+    pushsp r1, r1
+    stsr   eiwr, r1   ;/* spを EIWR から復帰 */
+    pushsp r1, r1
+
+    ;/* HV FE例外ハンドラの呼び出し */
+    mov   sp, r6
+    jarl _call_hv_ei_handler, lp
+
+    popsp r1, r1    ;/* sp */
+    ldsr  r1, eiwr 
+    popsp r1, r1    ;/* fpsr */
+    ldsr  r1, fpsr
+    popsp r1, r31
+    stsr  eiwr, sp
+
+    eiret
+
+
+    ;/*
+     ;*  HVで発生するDB例外のハンドラ
+     ;*/
+    .cseg text
+    .align 16
+    .extern hv_db_handler 
+hv_db_handler:
+    br hv_db_handler
+
+
+    ;/*
+     ;*  VMとHVの両方で発生する可能性がある例外のハンドラ
+     ;*  ・MIP/MDP
+     ;*  ・SYSERR
+     ;*/
+    .cseg text
+    .align 16
+    .extern vm_hv_fe_handler 
+vm_hv_fe_handler:
+    ;/* 
+     ;*  VM実行時に発生した例外か判断する
+     ;*  FEPSWHのGM[31]ビットが立っていればVMから来た場合と判断
+     ;*/
+    ldsr   r10, fewr
+    stsr   fepswh, r10
+    shl    1, r10
+    stsr   fewr, r10
+    bnc    hv_fe_handler
+
+    ;/*
+     ;*  VM側から呼びされた場合
+     ;*
+     ;*  例外処理ではバンク化されていないシステムレジスタは操作しない．また，依存しない処理とする．
+     ;*  例外処理内では割込みを許可しない．
+     ;*/
+    ;/* VMコンテキストの保存(スクラッチレジスタのみ) */
+    ldsr    sp, eiwr   ;/* sp_VMを EIWR に待避 */
+    ldsr    r1, fewr   ;/* r1_VMを FEWR に待避 */
+
+    ;/* HVスタックに変更 */
+    MYCCB r1, sp
+    ld.w  CCB_SP[r1], sp  ;/* p_my_ccb->sp -> sp */
+
+    ;/* 汎用レジスタの保存 */
+    stsr   fewr, r1       ;/* r1_VMを FEWR から復帰 */
+    pushsp r1, r31
+    stsr   fpsr, r1
+    pushsp r1, r1
+    stsr   eiwr, r1       ;/* sp_VM を EIWR から復帰 */
+    pushsp r1, r1
+
+    ;/* ホストのコンテキストの一部復帰 */
+    SET_PERMANENT_REGISTER r1 ;/* パーマネントレジスタを設定 */
+
+    ;/* VM例外ハンドラ呼び出し */
+    mov   sp, r6 ;/* 引数 */
+    jarl _call_vm_exc_handler, lp
+
+    ;/* VMコンテキストの復帰(スクラッチレジスタのみ) */
+    popsp r1, r1          ;/* sp_VMの取得 */
+    ldsr  r1, eiwr       ;/* sp_VMを EIWR に退避 */
+    popsp r1, r1          ;/* fpsr */
+    ldsr  r1, fpsr
+    popsp r1, r31
+    stsr  eiwr, sp       ;/* sp_VMを EIWR から復帰 */
+
+    ;/* VMタイムウィンドウへのリターン */
+    feret
+
 
     ;/*
      ;*  HVTRAPハンドラ
@@ -173,6 +285,9 @@ hvtrap_handler:
 
     ;/* spの保存 */
     st.w   sp, (VMCB_REG+(4*0))[r13]    ;/* sp -> p_runvm->reg[0] */
+    ;/* fpsrの保存 */
+    stsr   fpsr, r10
+    st.w   sp, (VMCB_S_SYSREG+(4*0))[r13]   ;/* fpsr -> p_runvm->s_sysreg[FPSR_NO] */
 
     ;/* HVC呼び出し中とする */
     mov     1, r13
@@ -181,7 +296,7 @@ hvtrap_handler:
     ;/*
      ;* ホストモードのレジスタを復帰
      ;*/
-    SET_PERMANENT_REGISTER ;/* パーマネントレジスタを設定 */
+    SET_PERMANENT_REGISTER r1 ;/* パーマネントレジスタを設定 */
     MYCCB  r1,sp            ;/* HVスタックに変更 */
     ld.w   CCB_SP[r1], sp   ;/* p_my_ccb->sp -> sp */
 
@@ -215,6 +330,8 @@ hvc_entry_error:
      ;*/
     ld.w   CCB_P_RUNVM[r9], r12       ;/* p_runvm -> r12 */
     ld.w   (VMCB_REG+(4*0))[r12], sp  ;/* p_runvm->reg[0] -> sp */
+    ld.w   (VMCB_S_SYSREG+(4*0))[r12], r9   ;/* p_runvm->s_sysreg[FPSR_NO] -> fpsr */
+    ldsr    r9, fpsr
 
     eiret
 
@@ -247,7 +364,7 @@ twdint_in_vmtw:
     ;/* ホストのコンテキストの一部復帰 */
     MYCCB r6,r7          ;/* スタックの復帰 */
     ld.w  CCB_SP[r6], sp ;/* p_my_ccb->sp -> sp */
-    SET_PERMANENT_REGISTER ;/* パーマネントレジスタを設定 */
+    SET_PERMANENT_REGISTER r7 ;/* パーマネントレジスタを設定 */
 
     ;/* タイムウィンドウ切り替えの呼び出し */
     Lea   ret_idle,lp
@@ -307,17 +424,50 @@ twdint_in_idle:
  ;*/
     ;/*
      ;*  VMタイムウィンド実行時のシステム周期タイマ割込み
-     ;*   エラー処理
      ;*/
     .cseg text
     .align 16
     .extern syscint_in_vmtw
 syscint_in_vmtw:
-    br syscint_in_vmtw
+    ;/* 
+     ;*  IDLEタイムウィンドウならIDLE-VMが動作
+     ;*  IDLEタイムウィンドウでなければエラー
+     ;*/
+    ;/* 
+     ;*  EIPSWHのGM[31]ビットが立っていればIDLE-VMから来た場合と判断
+     ;*/ 
+    ldsr   r10, eiwr
+    ldsr   r11, fewr
+    MYCCB  r10, r11
+    ld.b   CCB_RUNIDLE[r10], r11
+    cmp    r0, r11
+    stsr   eiwr, r10
+    stsr   fewr, r11
+    be     syscint_in_vmtw_0
+
+    ;/*
+     ;*  IDLE-VMからの遷移
+     ;*/
+    ;/* VMコンテキストの保存 */
+    SAVE_VM_CONTEXT
+
+    ;/* ホストのコンテキストの一部復帰 */
+    MYCCB r6,r7          ;/* スタックの復帰 */
+    ld.w  CCB_SP[r6], sp ;/* p_my_ccb->sp -> sp */
+    SET_PERMANENT_REGISTER r7 ;/* パーマネントレジスタを設定 */
+
+    ;/* システム周期切り替えの呼び出し */
+    br    _scyc_switch
+
+    ;/* ここには戻って来ない */
+syscint_in_vmtw_1:
+    br syscint_in_vmtw_1
+
+syscint_in_vmtw_0:
+    br syscint_in_vmtw_0
 
     ;/*
      ;*  HVタイムウィンド実行時のシステム周期タイマ割込み
-     ;*   エラー処理
      ;*/
     .cseg text
     .align 16
@@ -379,12 +529,13 @@ hvint_in_vmtw:
     pushsp r1, r1
     pushsp r4, r19         ;/* r4(gp)/r5(tp)も保存 */
     pushsp r30, r31
-
+    stsr   fpsr, r1
+    pushsp r1, r1
     stsr   eiwr, r1       ;/* sp_VM を EIWR から復帰 */
     pushsp r1, r1
 
     ;/* ホストのコンテキストの一部復帰 */
-    SET_PERMANENT_REGISTER ;/* パーマネントレジスタを設定 */
+    SET_PERMANENT_REGISTER r1 ;/* パーマネントレジスタを設定 */
 
     ;/* HVINT呼び出し中とする */
     MYCCB r12, r13
@@ -392,8 +543,8 @@ hvint_in_vmtw:
     st.b   r13, CCB_RUNHVINT[r12]  ;/* true -> p_my_ccb->runhvint */
 
     ;/* HV割込みハンドラの呼び出し */
-    mov   1, r6          ;/* タイムウィドウタイマを停止する */
-    jarl _call_hvint, lp
+    mov   sp, r6       ;/* コンテキストを保存したスタック */
+    jarl _call_hvint_in_vmtw, lp
 
     MYCCB r12, r13
     st.b   r0, CCB_RUNHVINT[r12]  ;/* false -> p_my_ccb->runhvint */
@@ -401,6 +552,8 @@ hvint_in_vmtw:
     ;/* VMコンテキストの復帰(スクラッチレジスタのみ) */
     popsp r1, r1          ;/* sp_VMの取得 */
     ldsr  r1, eiwr       ;/* sp_VMを EIWR に退避 */
+    popsp r1, r1          ;/* fpsr */
+    ldsr  r1, fpsr
     popsp r30, r31
     popsp r4, r19
     popsp r1, r1
@@ -432,8 +585,7 @@ hvint_in_hvtm:
     st.b   r13, CCB_RUNHVINT[r12]  ;/* true -> p_my_ccb->runhvint */
 
     ;/* HV割込みハンドラの呼び出し */
-    mov   1, r6         ;/* TWタイマを停止する */
-    jarl _call_hvint, lp
+    jarl _call_hvint_in_hvtw, lp
 
     MYCCB r12, r13
     st.b   r0, CCB_RUNHVINT[r12]  ;/* false -> p_my_ccb->runhvint */
@@ -458,8 +610,7 @@ hvint_in_idle:
     SAVE_SCRATCH_REG
 
     ;/* HV割込みハンドラの呼び出し */
-    mov   r0, r6          ;/* TWタイマを停止しない */
-    jarl _call_hvint, lp
+    jarl _call_hvint_in_idle, lp
 
     ;/* スクラッチレジスタの復帰 */
     RESTORE_SCRATCH_REG
@@ -548,3 +699,47 @@ ret_idle:
     addi    8, sp, sp
     RESTORE_SCRATCH_REG
     eiret
+
+    ;/*
+     ;*  引数1個のtrap0呼び出し
+     ;*/
+    .align 4
+    .extern _cal_trap0_1
+_cal_trap0_1:
+    trap 1
+    jmp [lp]
+    nop
+
+    ;/*
+     ;*  IDLEタイムウィンドウ実行時のtrap0呼び出し
+     ;*  現状でIDLE-VM呼び出しのみである
+     ;*/
+    .cseg text
+    .align 16
+    .extern trap0_in_idle
+trap0_in_idle:
+    ;/* 引数の退避 */
+    ldsr   r6, eiwr
+
+    ;/* IDLE処理のコンテキストの保存 */
+    SAVE_SCRATCH_REG
+
+    addi    -8, sp , sp
+    mov     sp, ep 
+    stsr    eipc, r6    ;/* EIPC の保存 */
+    sst.w   r6, 4[ep]
+    stsr    eipsw, r6   ;/* EIPSW の保存 */
+    sst.w   r6, 0[ep]
+    pushsp r20, r29
+
+    MYCCB r6,r7
+    st.w  sp, CCB_SP[r6] ;/* sp -> p_my_ccb->sp */
+
+    ;/* IDLE-VMへの切り替え */
+    stsr  eiwr,r6
+    Lea   ret_idle, lp
+    br    _switch_to_idle_vm
+    ;/* ここには戻って来ない */
+
+trap0_in_idle_1:
+    br trap0_in_idle_1

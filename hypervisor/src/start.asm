@@ -2,6 +2,7 @@
  ;*  ベクタテーブルとスタートアップルーチン
  ;*/
 $include (rh850asm.h)
+$include (hv_asm.inc)
 $include (hv_cfg_asm.inc)
 
     MAGIC_START .set 0x87654321 ;/* 同期用のマジックナンバー */
@@ -99,13 +100,13 @@ $endif ;/* __ASRH__ */
     ;/* 
      ;*  Enable FPU Access  
      ;*/
-    stsr psw, r12       ;/* load psw */
+    stsr psw, r12
     mov  0x00010000,r13 ;/* PSW.CU0(PSW[16]) = 1 */
     or   r13, r12
-    ldsr r12, psw       ;/* store psw */
-    movhi 0x0002, r0, r11
-    ldsr  r11, 6, 0     ;/* FPSR  */
-    ldsr  r0,  7, 0     ;/* FPEPC */
+    ldsr r12, psw 
+    mov  HV_INIT_FPSR, r11
+    ldsr r11, fpsr
+    ldsr r0,  fpepc
 
     ;/*
      ;*  _hardware_init_hook の呼出し

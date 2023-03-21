@@ -742,4 +742,29 @@ boot_core(uint8 coreid)
 
 #endif /* TOPPERS_MACRO_ONLY */
 
+
+/*
+ *  GCFU
+ */
+#define GCFU_BASE 0xFFFB1400
+#define GCFU_CC   ((uint32_t*)(GCFU_BASE + 0x08))
+#define GCFU_ME   ((uint32_t*)(GCFU_BASE + 0x10))
+#define GCFU_MS   ((uint32_t*)(GCFU_BASE + 0x14))
+#define GCFU_ERR  ((uint32_t*)(GCFU_BASE + 0x24))
+#define GCFU_SZC0 ((uint32_t*)(GCFU_BASE + 0x30))
+#define GCFU_SZC1 ((uint32_t*)(GCFU_BASE + 0x34))
+#define GCFU_SZC2 ((uint32_t*)(GCFU_BASE + 0x38))
+#define GCFU_SZC3 ((uint32_t*)(GCFU_BASE + 0x3C))
+#define GCFU_MSA(n) ((uint32_t*)(GCFU_BASE + 0x40 + (4*n)))
+#define GCFU_MDA(n) ((uint32_t*)(GCFU_BASE + 0xC0 + (4*n)))
+
+#define GCFU_SIZE_1M   (0x1U)
+#define GCFU_SIZE_8K   (0x9U)
+#define GCFU_SIZE_16K  (0xAU)
+#define GCFU_SIZE_32K  (0xBU)
+#define GCFU_SIZE_64K  (0xCU)
+#define GCFU_SIZE_128K (0xDU)
+#define GCFU_SIZE_256K (0xEU)
+#define GCFU_SIZE_512K (0xFU)
+
 #endif /* _U2A_H_ */

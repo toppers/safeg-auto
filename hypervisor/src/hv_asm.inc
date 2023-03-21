@@ -46,5 +46,12 @@ $ifndef _HV_ASM_H_
     CCB_SP .set (4 * 2)
     CCB_RUNHVC .set (4 * 3)
     CCB_RUNHVINT .set (CCB_RUNHVC + 1)
+    CCB_RUNVMID  .set (CCB_RUNHVINT + 1)
+    CCB_RUNIDLE  .set (CCB_RUNVMID + 1)
+
+;/*
+ ;*  HVでのFPSRの初期値
+ ;*/
+    HV_INIT_FPSR  .set 0x00020000
 
 $endif ;/* _HV_ASM_H_ */

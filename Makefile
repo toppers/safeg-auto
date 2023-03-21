@@ -18,6 +18,7 @@ ifeq ($(HV_OBJ),obj_1pe)
 vm:
 	make all MODE=$(MODE) -C ./vm_prog/vm0_0_prog
 	make all MODE=$(MODE) -C ./vm_prog/vm0_1_prog
+	make all MODE=$(MODE) -C ./vm_prog/vm0_idle_prog
 endif
 
 ifeq ($(HV_OBJ),obj_1pe_perf)

@@ -51,6 +51,19 @@ VM:
    Interrupt: #VM割込み 数値のみ指定可能
     - 200 #OSTM1_INTNO
     - 708
+ - Name:      VM0_IDLE
+   CoreID:    0
+   RestBase:  0x00300000
+   Memory:
+    - {Base: 0x00300000, Size: 0x00100000, Type: rom}
+    - {Base: 0xfda04000, Size: 0x00004000, Type: ram}
+    - {Base: 0xfe040000, Size: 0x00010000, Type: ram}
+    - {Base: 0xff000000, Size: 0x01000000, Type: peri}
+   SPID:      6
+   SPIDList:  [6] 
+   Interrupt: #VM割込み 数値のみ指定可能
+    - 201 #OSTM2_INTNO
+    - 717
 
 TDMA:
  SystemIntervalUS: 10000000

@@ -35,7 +35,7 @@ SafeG-Auto の仕様について説明したものである．
   - HVアイドル処理
   - HV割込みハンドラ
   - HVサービル関数
-  - HVフック関数
+  -	HVフック関数
   - HVユーザー起動関数
 
 ## 仮想マシン
@@ -176,6 +176,16 @@ HVアイドル処理の初回実行時のコンテキストの状態は次の通
   - 拡張割込みモード
 
 PSWのEVB=0・FPUを無効や，割込みモードの変更をした場合の動作は保証しない．
+
+### VMの呼び出し
+
+HVアイドル処理からサービスコールを呼び出すことで，アイドル区間内で特定のVMを実行することが可能である．
+
+一度VMを呼び出すとそのアイドル区間では呼び出したVMが実行される．
+
+次のシステム周期のアイドル区間が実行されると，サービコールからリターンする．
+
+呼び出し可能なVMは同じコアに割り当てられたVMのみである．
 
 ### マルチコア環境
 
@@ -370,6 +380,152 @@ VM割込みは，割り付けた仮想マシンのタイムウィンドウが実
   - 割り付けたVMが実行されるコアに対して割込みを発生させる．
 - HV割込み
   - HV割込み定義時に指定したコアに対して割込みを発生させる．
+
+# 例外処理
+
+例外処理は，HVで発生した例外とVMで例外発生した例外について分けられる．
+
+## HVで発生する例外
+
+HVで発生する例外に関しては，FE/EI例外毎にユーザー例外ハンドラを呼び出す．
+
+### FE例外ユーザー例外ハンドラ
+
+FE例外が発生した場合は以下の例外ハンドラを呼び出す
+
+	void hv_fe_handler(HVEXC_INFO *pHvexcInfo)
+
+pHvexcInfo はHVで発生したFE例外の例外情報が渡される
+
+### EI例外ユーザー例外ハンドラ
+
+EI例外が発生した場合は以下の例外ハンドラを呼び出す
+
+	void hv_ei_handler(HVEXC_INFO *pHvexcInfo)
+
+pHvexcInfo はHVで発生したEI例外の例外情報が渡される
+
+## HVで発生した例外の例外情報（HVEXC_INFO）
+
+それぞれの例外の引数として渡される，HVEXC_INFO  は構造体となっており，そのメンバーはは次の通りである．
+
+	uint32 cause;   /* 例外要因 */
+	uint32 pc;      /* pc */
+	uint32 psw;     /* psw */
+	uint32 regbase; /* レジスタの保存先のベースアドレス */
+
+regbaseには例外発生時の各種レジスタが保存されている領域であり，以下のオフセットによりアクセス可能である．
+
+
+|  レジスタ名 |  オフセットマクロ名
+| ----------- | ------------------- 
+|  FPSR       |  HVEXC_REGBASE_FPSR 
+|  R1         |  HVEXC_REGBASE_R1   
+|  R2         |  HVEXC_REGBASE_R2   
+|  R3(SP)     |  HVEXC_REGBASE_SP   
+|  R4         |  HVEXC_REGBASE_R4   
+|  R5         |  HVEXC_REGBASE_R5   
+|  R6         |  HVEXC_REGBASE_R6   
+|  R7         |  HVEXC_REGBASE_R7   
+|  R8         |  HVEXC_REGBASE_R8   
+|  R9         |  HVEXC_REGBASE_R9   
+|  R10        |  HVEXC_REGBASE_R10  
+|  R11        |  HVEXC_REGBASE_R11  
+|  R12        |  HVEXC_REGBASE_R12  
+|  R13        |  HVEXC_REGBASE_R13  
+|  R14        |  HVEXC_REGBASE_R14  
+|  R15        |  HVEXC_REGBASE_R15  
+|  R16        |  HVEXC_REGBASE_R16  
+|  R17        |  HVEXC_REGBASE_R17  
+|  R18        |  HVEXC_REGBASE_R18  
+|  R19        |  HVEXC_REGBASE_R19  
+|  R20        |  HVEXC_REGBASE_R20  
+|  R21        |  HVEXC_REGBASE_R21  
+|  R22        |  HVEXC_REGBASE_R22  
+|  R23        |  HVEXC_REGBASE_R23  
+|  R24        |  HVEXC_REGBASE_R24  
+|  R25        |  HVEXC_REGBASE_R25  
+|  R26        |  HVEXC_REGBASE_R26  
+|  R27        |  HVEXC_REGBASE_R27  
+|  R28        |  HVEXC_REGBASE_R28  
+|  R29        |  HVEXC_REGBASE_R29  
+|  R30        |  HVEXC_REGBASE_R30  
+|  R31        |  HVEXC_REGBASE_R31  
+
+
+## VMで発生する例外
+
+VMで発生する例外のうち，以下の例外以外はVM内で処理する
+
+	MIP/MDP : ホスト定義のMPUに対する違反
+	SYSERR : スレーブ応答エラー
+
+上記の2種類の例外に関しては，HVのユーザープログラムで定義した例外ハンドラを呼び出す．
+
+### MIP/MDP例外ユーザー例外ハンドラ
+
+ホスト定義のMPUに対する違反が発生した場合は以下の例外ハンドラを呼び出す
+
+	void vm_mip_handler(VMEXC_INFO *pVmexcInfo)
+
+pVmexcInfo は発生した例外の例外情報が渡される
+
+### SYSERR例外ユーザー例外ハンドラ
+
+スレーブ応答エラーが発生した場合は以下の例外ハンドラを呼び出す
+
+	void vm_syserr_handler(VMEXC_INFO *pVmexcInfo)
+
+pVmexcInfo は発生した例外の例外情報が渡される
+
+## VMで発生した例外の例外情報（VMEXC_INFO）
+
+それぞれの例外の引数として渡される，VHEXC_INFO  は構造体となっており，そのメンバーはは次の通りである．
+
+    uint32 cause;   /* 例外要因 */
+    ID     vmid;    /* VMID */
+    uint32 pc;      /* pc */
+    uint32 psw;     /* psw */
+    uint32 regbase; /* レジスタの保存先のベースアドレス */
+
+regbaseには例外発生時の各種レジスタが保存されている領域であり，以下のオフセットによりアクセス可能である．
+
+
+|  レジスタ名 |  オフセットマクロ名
+| ----------- | ------------------- 
+|  FPSR       |  VMEXC_REGBASE_FPSR 
+|  R1         |  VMEXC_REGBASE_R1   
+|  R2         |  VMEXC_REGBASE_R2   
+|  R3(SP)     |  VMEXC_REGBASE_SP   
+|  R4         |  VMEXC_REGBASE_R4   
+|  R5         |  VMEXC_REGBASE_R5   
+|  R6         |  VMEXC_REGBASE_R6   
+|  R7         |  VMEXC_REGBASE_R7   
+|  R8         |  VMEXC_REGBASE_R8   
+|  R9         |  VMEXC_REGBASE_R9   
+|  R10        |  VMEXC_REGBASE_R10  
+|  R11        |  VMEXC_REGBASE_R11  
+|  R12        |  VMEXC_REGBASE_R12  
+|  R13        |  VMEXC_REGBASE_R13  
+|  R14        |  VMEXC_REGBASE_R14  
+|  R15        |  VMEXC_REGBASE_R15  
+|  R16        |  VMEXC_REGBASE_R16  
+|  R17        |  VMEXC_REGBASE_R17  
+|  R18        |  VMEXC_REGBASE_R18  
+|  R19        |  VMEXC_REGBASE_R19  
+|  R20        |  VMEXC_REGBASE_R20  
+|  R21        |  VMEXC_REGBASE_R21  
+|  R22        |  VMEXC_REGBASE_R22  
+|  R23        |  VMEXC_REGBASE_R23  
+|  R24        |  VMEXC_REGBASE_R24  
+|  R25        |  VMEXC_REGBASE_R25  
+|  R26        |  VMEXC_REGBASE_R26  
+|  R27        |  VMEXC_REGBASE_R27  
+|  R28        |  VMEXC_REGBASE_R28  
+|  R29        |  VMEXC_REGBASE_R29  
+|  R30        |  VMEXC_REGBASE_R30  
+|  R31        |  VMEXC_REGBASE_R31  
+
 
 # マルチコア対応
 
@@ -591,6 +747,96 @@ VMタイムウィンドウではVM割込みとして，HVタイムウィンド�
 	実行中のHVタイムウィンドウの残り時間をマイクロ秒で取得する．
 	割込みを禁止して呼び出すことが可能である．
 	HVタイムウィンドウ処理が呼び出した場合，呼び出し直後にタイムウィンドウ切り換えが発生すると，実際の残り時間と異なる値となる可能性があるため，ある程度のマージンを持って使用する必要がある．
+
+### void StartHV(void)
+### 機能
+	呼び出されたコアでハイパーバイザーの動作を開始する．
+	ユーザーメイン関数からのみ呼び出し可能である．
+	HVサポートコア以外から呼び出された場合はリターンする．
+
+## HVアイドル処理からのVMの呼び出し
+### ER ercd = CallIdleVM(ID vmid) 
+### パラメータ
+	ID		vmid	呼び出すVMのID
+### リターンパラメータ
+	ER		ercd		正常終了(E_OK)またはエラーコード
+### エラーコード
+	E_OK	正常終了
+	E_ID	vmidで指定したVMが存在しない
+	E_OBJ	vmidで指定したVMが異なるコアに割り付けられている
+	E_CTX	コンテキストエラー
+			HVアイドル処理以外からの呼び出し
+### 機能
+	vmidで指定したVMをアイドル区間で実行する．
+	指定可能なVMは同じ呼び出したHVアイドル処理と同じコアに割り付けられているもののみ指定可能．
+	HVアイドル処理からのみ呼び出し可能．
+	次のシステム周期でHVアイドル処理が実行されるとこのサービコールからリターンする．
+
+## VMのリセット
+### ER ercd = ResetVM(ID vmid, uint32_t arg1, uint32_t arg2, uint32_t arg3, uint32_t arg4) 
+### パラメータ
+	ID			vmid	リセットするVMのID
+	uint32_t 	arg1 	VMへの第1引数
+	uint32_t 	arg2 	VMへの第2引数
+	uint32_t 	arg3 	VMへの第3引数
+	uint32_t 	arg4 	VMへの第4引数
+### リターンパラメータ
+	ER		ercd		正常終了(E_OK)またはエラーコード
+### エラーコード
+	E_OK	正常終了
+	E_ID	vmidで指定したVMが存在しない
+	E_CTX	コンテキストエラー
+			HV割込みハンドラ/HVタイムウィンドウ処理/HVアイドル処理/HVフック関数/スタートアップコード
+			以外からの呼び出し．
+### 機能
+	vmidで指定したVMをリセットする．
+	リセットと同様にPSWをセットして，登録されたRBASEから実行するよう設定する．
+	arg1からarg4に指定された値は，リセット時のVMのR5からR9に設定される．
+	リセットの要因を伝えるために使用することを想定している．
+	最初の起動の値は全て0である．
+	変更したい場合は，スタートアップコードから本サービスコールを呼び出すこと．
+	
+## VM疑似例外生成API(FE例外)
+### ER ercd = RaiseVMFakeFE(ID vmid, uint32_t voffset, uint32_t cause) 
+### パラメータ
+	ID			vmid	VM疑似例外を送るVMのID
+	uint32_t 	voffset	実行するアドレスのRBASEからのオフセット
+	uint32_t 	cause 	例外要因レジスタ(feic)に設定する値
+### リターンパラメータ
+	ER		ercd		正常終了(E_OK)またはエラーコード
+### エラーコード
+	E_OK	正常終了
+	E_ID	vmidで指定したVMが存在しない
+	E_CTX	コンテキストエラー
+			HV割込みハンドラ/HVタイムウィンドウ処理/HVアイドル処理/HVフック関数	以外からの呼び出し．
+### 機能
+	vmidで指定したVMに擬似例外(FE)例外を送る．
+	VMの状態をFE例外発生時と同じ状態として，RBASE + voffsetの番地から実行するよう設定する．
+	設定するレジスタはpsw，pc，feicである．pswについてはNPビットを設定する．
+	feicにはcauseで指定した値が設定される．
+
+## VM疑似例外生成API(EI例外)
+### ER ercd = RaiseVMFakeEI(ID vmid, uint32_t voffset, uint32_t cause) 
+### パラメータ
+	ID			vmid	VM疑似例外を送るVMのID
+	uint32_t 	voffset	実行するアドレスのRBASEからのオフセット
+	uint32_t 	cause 	例外要因レジスタ(eiic)に設定する値
+### リターンパラメータ
+	ER		ercd		正常終了(E_OK)またはエラーコード
+### エラーコード
+	E_OK	正常終了
+	E_ID	vmidで指定したVMが存在しない
+	E_CTX	コンテキストエラー
+			HV割込みハンドラ/HVタイムウィンドウ処理/HVアイドル処理/HVフック関数	以外からの呼び出し．
+### 機能
+	vmidで指定したVMに擬似例外(EI)例外を送る．
+	VMの状態をEI例外発生時と同じ状態として，RBASE + voffsetの番地から実行するよう設定する．
+	設定するレジスタはpsw，pc，eiicである．pswについてはIDビットを設定する．
+	eiicにはcauseで指定した値が設定される．
+
+## ER GetCurrentVMID(ID* pVMID);
+
+
 
 # ゲスト処理向けサービス
 
@@ -834,5 +1080,13 @@ HVコールでバッファを取得する．取得したバッファには直接
 ### 機能
 	SBufIDで示す共有バッファのアクセス権を返却．
 	アクセス権を取得してない場合はエラーを返す．
+
+# 更新履歴
+
+- 2023/03/20
+	- HVアイドル処理からのVM呼び出し機能を追加．
+	- 例外処理機能を追加．
+
+- 2022/07/28  最初のリリース
 
 以上．

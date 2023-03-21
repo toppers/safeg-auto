@@ -1,9 +1,9 @@
 ﻿<CubeSuiteProject>
-  <ProductVersion>9.05.00.00</ProductVersion>
+  <ProductVersion>9.09.00.00</ProductVersion>
   <Class Guid="68f4a651-b9cd-473b-a595-b00447132ffa">
     <Instance Guid="00000000-0000-0000-0000-000000000000">
       <FormatVersion>2.0</FormatVersion>
-      <FileVersion>9.5</FileVersion>
+      <FileVersion>9.9</FileVersion>
       <ProjectGuid>c77a71df-4295-4251-ab74-d31506bddc7a</ProjectGuid>
       <ProjectItemGuid>8188ea58-c5d5-4c63-b125-49e1a8cf664a</ProjectItemGuid>
       <FileCategoryGuid>12a9b087-06f0-4c04-8dae-c0b066d161f8</FileCategoryGuid>
@@ -47,6 +47,12 @@
       <Name>vm0_1_prog.elf</Name>
       <Type>File</Type>
       <RelativePath>..\..\..\vm_prog\vm0_1_prog\vm0_1_prog.elf</RelativePath>
+      <ParentItem>ca04577b-ad4a-4a54-82a7-3c1443666c77</ParentItem>
+    </Instance>
+    <Instance Guid="b67e5491-70c3-47f9-8ed1-c648dbe10cc0">
+      <Name>vm0_idle_prog.elf</Name>
+      <Type>File</Type>
+      <RelativePath>..\..\..\vm_prog\vm0_idle_prog\vm0_idle_prog.elf</RelativePath>
       <ParentItem>ca04577b-ad4a-4a54-82a7-3c1443666c77</ParentItem>
     </Instance>
     <Instance Guid="7f83eb33-7bd3-4c24-bd96-45080826023f">
@@ -745,6 +751,7 @@
   </Class>
   <Class Guid="fb98844b-2c27-4275-9804-f6e63e204da0">
     <Instance Guid="fb98844b-2c27-4275-9804-f6e63e204da0">
+      <TypeOfStorageOfUserSettings>UserMtudFile</TypeOfStorageOfUserSettings>
       <UseStandardLicenseOnly>True</UseStandardLicenseOnly>
       <MemoCount>0</MemoCount>
     </Instance>
@@ -1232,6 +1239,10 @@
     </Instance>
     <Instance Guid="3a006d61-37c8-4703-9896-174e268cdecb">
       <ItemAddTime>637851206098077998</ItemAddTime>
+      <ItemAddTimeCount>0</ItemAddTimeCount>
+    </Instance>
+    <Instance Guid="b67e5491-70c3-47f9-8ed1-c648dbe10cc0">
+      <ItemAddTime>638149323464925211</ItemAddTime>
       <ItemAddTimeCount>0</ItemAddTimeCount>
     </Instance>
   </Class>
@@ -3089,7 +3100,7 @@
       <DebuggerProperty-EssentialProperty-Clock-PeripheralUltraHighSpeedClock>160000</DebuggerProperty-EssentialProperty-Clock-PeripheralUltraHighSpeedClock>
       <DebuggerProperty-EssentialProperty-TargetConnect-UseGtmDebugMode>False</DebuggerProperty-EssentialProperty-TargetConnect-UseGtmDebugMode>
       <DebuggerProperty-EssentialProperty-TargetConnect-DebugMcsChannel>0</DebuggerProperty-EssentialProperty-TargetConnect-DebugMcsChannel>
-      <DebuggerProperty-DownloadProperty-DebugInformation-DownloadFiles-Length>3</DebuggerProperty-DownloadProperty-DebugInformation-DownloadFiles-Length>
+      <DebuggerProperty-DownloadProperty-DebugInformation-DownloadFiles-Length>4</DebuggerProperty-DownloadProperty-DebugInformation-DownloadFiles-Length>
       <DebuggerProperty-DownloadProperty-DebugInformation-DownloadFiles-DownloadItem0-DebuggerGuid>494fc53e-acbe-45bb-aa9e-9cdf6b3e0fed</DebuggerProperty-DownloadProperty-DebugInformation-DownloadFiles-DownloadItem0-DebuggerGuid>
       <DebuggerProperty-DownloadProperty-DebugInformation-DownloadFiles-DownloadItem0-IsDefaultItem>False</DebuggerProperty-DownloadProperty-DebugInformation-DownloadFiles-DownloadItem0-IsDefaultItem>
       <DebuggerProperty-DownloadProperty-DebugInformation-DownloadFiles-DownloadItem0-DefaultItemProjectGuid>00000000-0000-0000-0000-000000000000</DebuggerProperty-DownloadProperty-DebugInformation-DownloadFiles-DownloadItem0-DefaultItemProjectGuid>
@@ -3257,6 +3268,31 @@
       <Debugger-DebugTarget-ProcessorElementNumber>0</Debugger-DebugTarget-ProcessorElementNumber>
       <Debugger-DebugTarget-SubID>0</Debugger-DebugTarget-SubID>
       <DebuggerProperty-EssentialProperty-EmulatorConnect-SerialNumber />
+      <DebuggerProperty-EssentialProperty-Multicore-DebugTargetEnabler-CPU0>True</DebuggerProperty-EssentialProperty-Multicore-DebugTargetEnabler-CPU0>
+      <DebuggerProperty-EssentialProperty-Multicore-DebugTargetEnabler-CPU1>True</DebuggerProperty-EssentialProperty-Multicore-DebugTargetEnabler-CPU1>
+      <DebuggerProperty-EssentialProperty-Multicore-DebugTargetEnabler-CPU2>True</DebuggerProperty-EssentialProperty-Multicore-DebugTargetEnabler-CPU2>
+      <DebuggerProperty-EssentialProperty-Multicore-DebugTargetEnabler-CPU3>True</DebuggerProperty-EssentialProperty-Multicore-DebugTargetEnabler-CPU3>
+      <DebuggerProperty-EssentialProperty-TargetConnect-CommunicationMethod>Lpd</DebuggerProperty-EssentialProperty-TargetConnect-CommunicationMethod>
+      <DebuggerProperty-EssentialProperty-TargetConnect-JtagClock>4294967295</DebuggerProperty-EssentialProperty-TargetConnect-JtagClock>
+      <DebuggerProperty-DownloadProperty-DebugInformation-DownloadFiles-DownloadItem3-DebuggerGuid>b67e5491-70c3-47f9-8ed1-c648dbe10cc0</DebuggerProperty-DownloadProperty-DebugInformation-DownloadFiles-DownloadItem3-DebuggerGuid>
+      <DebuggerProperty-DownloadProperty-DebugInformation-DownloadFiles-DownloadItem3-IsDefaultItem>False</DebuggerProperty-DownloadProperty-DebugInformation-DownloadFiles-DownloadItem3-IsDefaultItem>
+      <DebuggerProperty-DownloadProperty-DebugInformation-DownloadFiles-DownloadItem3-DefaultItemProjectGuid>00000000-0000-0000-0000-000000000000</DebuggerProperty-DownloadProperty-DebugInformation-DownloadFiles-DownloadItem3-DefaultItemProjectGuid>
+      <DebuggerProperty-DownloadProperty-DebugInformation-DownloadFiles-DownloadItem3-FileName>..\..\..\vm_prog\vm0_idle_prog\vm0_idle_prog.elf</DebuggerProperty-DownloadProperty-DebugInformation-DownloadFiles-DownloadItem3-FileName>
+      <DebuggerProperty-DownloadProperty-DebugInformation-DownloadFiles-DownloadItem3-FileType>LoadModuleFile</DebuggerProperty-DownloadProperty-DebugInformation-DownloadFiles-DownloadItem3-FileType>
+      <DebuggerProperty-DownloadProperty-DebugInformation-DownloadFiles-DownloadItem3-CompilerType>Auto</DebuggerProperty-DownloadProperty-DebugInformation-DownloadFiles-DownloadItem3-CompilerType>
+      <DebuggerProperty-DownloadProperty-DebugInformation-DownloadFiles-DownloadItem3-Offset>0</DebuggerProperty-DownloadProperty-DebugInformation-DownloadFiles-DownloadItem3-Offset>
+      <DebuggerProperty-DownloadProperty-DebugInformation-DownloadFiles-DownloadItem3-StartAddress>0</DebuggerProperty-DownloadProperty-DebugInformation-DownloadFiles-DownloadItem3-StartAddress>
+      <DebuggerProperty-DownloadProperty-DebugInformation-DownloadFiles-DownloadItem3-ObjectDownload>True</DebuggerProperty-DownloadProperty-DebugInformation-DownloadFiles-DownloadItem3-ObjectDownload>
+      <DebuggerProperty-DownloadProperty-DebugInformation-DownloadFiles-DownloadItem3-SymbolDownload>True</DebuggerProperty-DownloadProperty-DebugInformation-DownloadFiles-DownloadItem3-SymbolDownload>
+      <DebuggerProperty-DownloadProperty-DebugInformation-DownloadFiles-DownloadItem3-UsePicPidOffset>False</DebuggerProperty-DownloadProperty-DebugInformation-DownloadFiles-DownloadItem3-UsePicPidOffset>
+      <DebuggerProperty-DownloadProperty-DebugInformation-DownloadFiles-DownloadItem3-UsePicPirodPidOffset>False</DebuggerProperty-DownloadProperty-DebugInformation-DownloadFiles-DownloadItem3-UsePicPirodPidOffset>
+      <DebuggerProperty-DownloadProperty-DebugInformation-DownloadFiles-DownloadItem3-PicOffset>0</DebuggerProperty-DownloadProperty-DebugInformation-DownloadFiles-DownloadItem3-PicOffset>
+      <DebuggerProperty-DownloadProperty-DebugInformation-DownloadFiles-DownloadItem3-PirodOffset>0</DebuggerProperty-DownloadProperty-DebugInformation-DownloadFiles-DownloadItem3-PirodOffset>
+      <DebuggerProperty-DownloadProperty-DebugInformation-DownloadFiles-DownloadItem3-PidOffset>0</DebuggerProperty-DownloadProperty-DebugInformation-DownloadFiles-DownloadItem3-PidOffset>
+      <DebuggerProperty-DownloadProperty-DebugInformation-DownloadFiles-DownloadItem3-GenerateInformationForInputCompletion>True</DebuggerProperty-DownloadProperty-DebugInformation-DownloadFiles-DownloadItem3-GenerateInformationForInputCompletion>
+      <DebuggerProperty-OptionalProperty-Trace-TraceMemory>InternalTraceMemory</DebuggerProperty-OptionalProperty-Trace-TraceMemory>
+      <DebuggerProperty-OptionalProperty-Trace-TraceMemoryStartAddress>2147483647</DebuggerProperty-OptionalProperty-Trace-TraceMemoryStartAddress>
+      <DebuggerProperty-OptionalProperty-Trace-TraceMemorySize>8192</DebuggerProperty-OptionalProperty-Trace-TraceMemorySize>
     </Instance>
   </Class>
   <Class Guid="1671e1b6-fdf9-42ca-9c4e-abbcbbeffadd">

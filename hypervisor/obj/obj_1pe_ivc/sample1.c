@@ -11,6 +11,18 @@
 #define USE_HVINT
 
 /*
+ *  VMのMIP/MDP例外発生時の挙動
+ */
+#define TO_MIP_RESET
+//#define TO_MIP_FAKEFE
+
+/*
+ *  VMのSYSERR例外発生時の挙動
+ */
+#define TO_SYSERR_RESET
+//#define TO_SYSERR_FAKEFE
+
+/*
  *  HVINTとして使用するTAUDとOSTMの番号
  */
 #define HVINT1_TAUDNO    9
@@ -417,4 +429,82 @@ hvc_test3(int arg1, int arg2, int arg3)
     GetCoreID(&coreid);
 //    syslog("HV%d : hvc_test3 :  arg1 = %d,  arg2 = %d,  arg3 = %d.\n", coreid, arg1, arg2, arg3);
     return (arg1 + arg2 + arg3)*2;
+}
+
+/*
+ *  VM発生のMIP/MDP例外ハンドラ
+ */
+void
+vm_mip_handler(VMEXC_INFO *pVmexcInfo)
+{
+    ID coreid;
+    
+    GetCoreID(&coreid);
+    
+    syslog("HV%d : MIP Handler cause 0x%x, pc 0x%x, sp 0x%x. \n",
+           coreid, pVmexcInfo->cause, pVmexcInfo->pc,
+           *((uint32*)(pVmexcInfo->regbase + VMEXC_REGBASE_SP)));
+
+    syslog("HV%d : MIP Handler : reboot VM %d .\n", coreid, pVmexcInfo->vmid);
+
+#ifdef TO_MIP_RESET    
+    ResetVM(pVmexcInfo->vmid, 1, 0, 0, 0);
+#endif /* TO_MIP_RESET */
+#ifdef TO_MIP_FAKEFE
+    RaiseVMFakeFE(pVmexcInfo->vmid, 0x90, pVmexcInfo->cause);
+#endif /* TO_MIP_FAKEFE */    
+}
+
+/*
+ *  VM発生のSYSERR例外ハンドラ
+ */
+void
+vm_syserr_handler(VMEXC_INFO *pVmexcInfo)
+{
+    ID coreid;
+    
+    GetCoreID(&coreid);
+    
+    syslog("HV%d : SYSERR Handler cause 0x%x, pc 0x%x, sp 0x%x. \n",
+           coreid, pVmexcInfo->cause, pVmexcInfo->pc,
+           *((uint32*)(pVmexcInfo->regbase + VMEXC_REGBASE_SP)));
+
+    syslog("HV%d : SYSERR Handler : reboot VM %d .\n", coreid, pVmexcInfo->vmid);
+
+#ifdef TO_SYSERR_RESET
+    ResetVM(pVmexcInfo->vmid, 2, 0, 0, 0);
+#endif /* TO_SYSERR_RESET */
+#ifdef TO_SYSERR_FAKEFE    
+    RaiseVMFakeFE(pVmexcInfo->vmid, 0x10, pVmexcInfo->cause);
+#endif /* TO_SYSERR_FAKEFE */        
+}
+
+/*
+ *  HV発生のFE例外ハンドラ（ユーザーコード）
+ */
+void
+hv_fe_handler(HVEXC_INFO *pHvexcInfo)
+{
+    ID coreid;
+    
+    GetCoreID(&coreid);
+
+    syslog("HV%d : HV FE Handler cause 0x%x, pc 0x%x, sp 0x%x. \n",
+           coreid, pHvexcInfo->cause, pHvexcInfo->pc,
+           *((uint32*)(pHvexcInfo->regbase + HVEXC_REGBASE_SP)));
+}
+
+/*
+ *  HV発生のEI例外ハンドラ（ユーザーコード）
+ */
+void
+hv_ei_handler(HVEXC_INFO *pHvexcInfo)
+{
+    ID coreid;
+    
+    GetCoreID(&coreid);
+    
+    syslog("HV%d : HV EI Handler cause 0x%x, pc 0x%x, sp 0x%x. \n",
+           coreid, pHvexcInfo->cause, pHvexcInfo->pc,
+           *((uint32*)(pHvexcInfo->regbase + HVEXC_REGBASE_SP)));
 }

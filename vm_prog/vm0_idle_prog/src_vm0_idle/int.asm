@@ -1,160 +1,161 @@
-#include <rh850asm.h>
+$include (rh850asm.h)
 
-#define OSTM0_INTNO    199
-#define OSTM1_INTNO    200
-#define OSTM2_INTNO    201
-#define OSTM3_INTNO    202
-#define OSTM4_INTNO    203
+    OSTM0_INTNO .set 199
+    OSTM1_INTNO .set 200
+    OSTM2_INTNO .set 201
+    OSTM3_INTNO .set 202
+    OSTM4_INTNO .set 203
 
-    /* 
-     *  ベクターテーブル
-     *  ここにRBASEが設定されることを想定（ここが電源投入時の開始アドレス）
-     */
-    .section .reset.text
+    ;/* 
+     ;*  ベクターテーブル
+     ;*  ここにRBASEが設定されることを想定（ここが電源投入時の開始アドレス）
+     ;*/
+    RESET .cseg text
     .align 2
-    .global _ResetVector
+    .extern _ResetVector
 _ResetVector:
     jr _Bootup
     .rept 6
     nop
-    .endr
-_SYSERR: /* 010H 010 */
+    .endm
+_SYSERR: ;/* 010H 010 */
     .rept 8
     nop
-    .endr
-_HVTRAP: /* 020H 020 */
+    .endm
+_HVTRAP: ;/* 020H 020 */
     .rept 8
     nop
-    .endr
-_FETRAP: /* 030H 030 */
+    .endm
+_FETRAP: ;/* 030H 030 */
     .rept 8
     nop
-    .endr
-_TRAP0: /* 040H 040 */
+    .endm
+_TRAP0: ;/* 040H 040 */
     .rept 8
     nop
-    .endr
-_TRAP1: /* 050H 050 */
+    .endm
+_TRAP1: ;/* 050H 050 */
     .rept 8
     nop
-    .endr
-_RIE: /* 060H 060 */
+    .endm
+_RIE: ;/* 060H 060 */
     .rept 8
     nop
-    .endr
-_FPPFPI: /* 070H 070 */
+    .endm
+_FPPFPI: ;/* 070H 070 */
     .rept 8
     nop
-    .endr
-_UCPOP: /* 080H 080 */
+    .endm
+_UCPOP: ;/* 080H 080 */
     .rept 8
     nop
-    .endr
-_MIP: /* 090H 090 */
-    jr32 _MIP
-
-_PIE: /* 0A0H 0A0 */
+    .endm
+_MIP: ;/* 090H 090 */
     .rept 8
     nop
-    .endr
-_DEBUG: /* 0B0H 0B0 */
+    .endm
+_PIE: ;/* 0A0H 0A0 */
     .rept 8
     nop
-    .endr
-_MAE: /* 0C0H 0C0 */
+    .endm
+_DEBUG: ;/* 0B0H 0B0 */
     .rept 8
     nop
-    .endr
-_RFU: /* 0D0H 0D0 */
+    .endm
+_MAE: ;/* 0C0H 0C0 */
     .rept 8
     nop
-    .endr
-_FENMI: /* 0E0H 0E0 */
+    .endm
+_RFU: ;/* 0D0H 0D0 */
     .rept 8
     nop
-    .endr
-_FEINT: /* 0F0H 0F0 */
+    .endm
+_FENMI: ;/* 0E0H 0E0 */
     .rept 8
     nop
-    .endr
-_EIINTn0: /* （優先度0） 100H */
+    .endm
+_FEINT: ;/* 0F0H 0F0 */
     .rept 8
     nop
-    .endr
-_EIINTn1: /* （優先度1） 110 */
+    .endm
+_EIINTn0: ;/* （優先度0） 100H */
     .rept 8
     nop
-    .endr
-_EIINTn2: /* （優先度2） 120H */
+    .endm
+_EIINTn1: ;/* （優先度1） 110 */
     .rept 8
     nop
-    .endr
-_EIINTn3: /* （優先度3） 130 */
+    .endm
+_EIINTn2: ;/* （優先度2） 120H */
     .rept 8
     nop
-    .endr
-_EIINTn4: /* （優先度4） 140H */
+    .endm
+_EIINTn3: ;/* （優先度3） 130 */
     .rept 8
     nop
-    .endr
-_EIINTn5: /* （優先度5） 150 */
+    .endm
+_EIINTn4: ;/* （優先度4） 140H */
     .rept 8
     nop
-    .endr
-_EIINTn6: /* （優先度6） 160H */
+    .endm
+_EIINTn5: ;/* （優先度5） 150 */
     .rept 8
     nop
-    .endr
-_EIINTn7: /* （優先度7） 170 */
+    .endm
+_EIINTn6: ;/* （優先度6） 160H */
     .rept 8
     nop
-    .endr
-_EIINTn8: /* （優先度8） 180H */
+    .endm
+_EIINTn7: ;/* （優先度7） 170 */
+    .rept 8
+    nop
+    .endm
+_EIINTn8: ;/* （優先度8） 180H */
     jr int_handler
     .rept 6
     nop
-    .endr
-_EIINTn9: /* （優先度9） 190 */
+    .endm
+_EIINTn9: ;/* （優先度9） 190 */
     .rept 8
     nop
-    .endr
-_EIINTn10: /* （優先度10） 1A0 */
+    .endm
+_EIINTn10: ;/* （優先度10） 1A0 */
     jr int_handler
     .rept 6
     nop
-    .endr
-_EIINTn11: /* （優先度11） 1B0 */
+    .endm
+_EIINTn11: ;/* （優先度11） 1B0 */
     .rept 8
     nop
-    .endr
-_EIINTn12: /* （優先度12） 1C0 */
+    .endm
+_EIINTn12: ;/* （優先度12） 1C0 */
     .rept 8
     nop
-    .endr
-_EIINTn13: /* （優先度13） 1D0 */
+    .endm
+_EIINTn13: ;/* （優先度13） 1D0 */
     .rept 8
     nop
-    .endr
-_EIINTn14: /* （優先度14） 1E0 */
+    .endm
+_EIINTn14: ;/* （優先度14） 1E0 */
     .rept 8
     nop
-    .endr
-_EIINTn15: /* （優先度15） 1F0 */
+    .endm
+_EIINTn15: ;/* （優先度15） 1F0 */
     jr int_handler
     .rept 6
     nop
-    .endr
+    .endm
 
     TCB_p_tinib	.set	8
 
-    /*
-     *  割り込みハンドラ
-     */
-    .section .text
+    ;/*
+     ;*  割り込みハンドラ
+     ;*/
+    .cseg text
     .align 2
-    .global int_handler 
+    .extern int_handler 
 int_handler:
-    /* スクラッチレジスタを保存 */
+    ;/* スクラッチレジスタを保存 */
     addi    -76 , sp , sp
     st.w    r1 ,  72[sp]
     st.w    r6 ,  68[sp]
@@ -173,32 +174,32 @@ int_handler:
     st.w    r19 , 16[sp]
     st.w    ep,   12[sp]
     st.w    r31 ,  8[sp]
-    /* 多重割込みのため，現在のEIPCとEIPSWを保存 */
+    ;/* 多重割込みのため，現在のEIPCとEIPSWを保存 */
     stsr    eipc,   r6
     st.w    r6 ,   4[sp]
     stsr    eipsw,  r6
     st.w    r6 ,   0[sp]
 
-    /* 割込み要因の特定 */
+    ;/* 割込み要因の特定 */
     stsr    eiic,   r6
-    /* EIC割込みは0x1000 から(V850E3v5) */
+    ;/* EIC割込みは0x1000 から(V850E3v5) */
     addi   -0x1000, r6, r6
     nop
 
-    /* OSTM0の場合 */
+    ;/* OSTM0の場合 */
     movea OSTM0_INTNO,r0,r11
     cmp   r11,r6
     bne   call_ostm1
 
-    /* 優先度8をマスク */
+    ;/* 優先度8をマスク */
     ei
     jarl  _ostm0_handler,lp
     di
     br    int_handler_exit
 
-    /* OSTM1の場合 */
+    ;/* OSTM1の場合 */
 call_ostm1:
-    /* OSTM1の場合 */
+    ;/* OSTM1の場合 */
     movea OSTM1_INTNO,r0,r11
     cmp   r11,r6
     bne   call_ostm2
@@ -207,7 +208,7 @@ call_ostm1:
     di
     br    int_handler_exit
 
-    /* OSTM2の場合 */
+    ;/* OSTM2の場合 */
 call_ostm2:
     movea OSTM2_INTNO,r0,r11
     cmp   r11,r6
@@ -217,7 +218,7 @@ call_ostm2:
     di
     br    int_handler_exit
 
-    /* OSTM3の場合 */
+    ;/* OSTM3の場合 */
 call_ostm3:
     movea OSTM3_INTNO,r0,r11
     cmp   r11,r6
@@ -227,7 +228,7 @@ call_ostm3:
     di
     br    int_handler_exit
 
-    /* OSTM4の場合 */
+    ;/* OSTM4の場合 */
 call_ostm4:
     movea OSTM4_INTNO,r0,r11
     cmp   r11,r6
@@ -236,7 +237,7 @@ call_ostm4:
     jarl  _ostm4_handler,lp
     di
 
-    /* タイムウィンドウトリガ割込み(707)の場合 */
+    ;/* タイムウィンドウトリガ割込み(707)の場合 */
 twtgint_707:
     movea 707,r0,r11
     cmp   r11,r6
@@ -245,7 +246,7 @@ twtgint_707:
     jarl  _twtgint_handler,lp
     di
 
-    /* タイムウィンドウトリガ割込み(708)の場合 */
+    ;/* タイムウィンドウトリガ割込み(708)の場合 */
 twtgint_708:
     movea 708,r0,r11
     cmp   r11,r6

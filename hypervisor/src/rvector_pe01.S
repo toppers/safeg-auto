@@ -11,7 +11,7 @@ _ResetVector:
 
     .align 16
 _SYSERR: /* 010H 010H */
-    jr32 _SYSERR
+    jr32 vm_hv_fe_handler
 
     .align 16
 _HVTRAP: /* 020H 020H */
@@ -19,43 +19,43 @@ _HVTRAP: /* 020H 020H */
 
     .align 16
 _FETRAP: /* 030H 030H */
-    jr32 _FETRAP
+    jr32 hv_fe_handler
 
     .align 16
 _TRAP0: /* 040H 040H */
-    jr32 _TRAP0
+    jr32 hv_ei_handler
 
     .align 16
 _TRAP1: /* 050H 050H */
-    jr32 _TRAP1
+    jr32 hv_ei_handler
 
     .align 16
 _RIE: /* 060H 060H */
-    jr32 _RIE
+    jr32 hv_fe_handler
 
     .align 16
 _FPPFPI: /* 070H 070H */
-    jr32 _FPPFPI
+    jr32 hv_ei_handler
 
     .align 16
 _UCPOP: /* 080H 080H */
-    jr32 _UCPOP
+    jr32 hv_fe_handler
 
     .align 16
 _MIP: /* 090H 090H */
-    jr32 mip_handler
+    jr32 vm_hv_fe_handler
 
     .align 16
 _PIE: /* 0A0H 0A0H */
-    jr32 _PIE
+    jr32 hv_fe_handler
 
     .align 16
 _DEBUG: /* 0B0H 0B0H */
-    jr32 _DEBUG
+    jr32 hv_db_handler 
 
     .align 16
 _MAE: /* 0C0H 0C0H */
-    jr32 _MAE
+    jr32 hv_fe_handler
 
     .align 16
 _RFU: /* 0D0H 0D0H */
@@ -63,11 +63,11 @@ _RFU: /* 0D0H 0D0H */
 
     .align 16
 _FENMI: /* 0E0H 0E0H */
-    jr32 _FENMI
+    jr32 hv_fe_handler
 
     .align 16
 _FEINT: /* 0F0H 0F0H */
-    jr32 _FEINT
+    jr32 hv_fe_handler
 
     .align 16
 _EIINTn0: /* （優先度0） 100H */

@@ -122,6 +122,7 @@ ccrh
 - 1PE
   - 1コアで動作するプロジェクト．
   - VMを2個実行．
+  - IDLE処理でIDLE用のVMを実行．
 - 1PE_COM
   - 1コアで動作するプロジェクト．
   - VMを2個実行．
@@ -270,6 +271,16 @@ make
 - CRAM
   - 64KB : 0xfe030000～0xfe03ffff 
 
+### vm0_idle
+- UART
+  - RLIN3_PORT0 : CORE0 コンソール出力 
+- FLASH 
+  - 1MB  : 0x00300000～0x003fffff
+- LRAM  
+  - 16KB : 0xfdc0c000～0xfdc0ffff
+- CRAM
+  - 64KB : 0xfe040000～0xfe05ffff   
+
 #### vm1_0_prog
 - OSTM
  - チャネル2
@@ -331,6 +342,7 @@ make
   - 16KB : 0xfda04000～0xfda07fff
 - CRAM
   - 64KB : 0xfe040000～0xfe05ffff 
+
 
 # ファイル構成
 
@@ -418,13 +430,16 @@ make
 	- vm0_1_prgo
 	- vm1_0_prgo
 	- vm1_1_prgo
+  - vm0_idle
 - vm_atk2   : ATK2ゲストのプロジェクト
 
 # 変更履歴
-- 202x/xx/xx 1.1 
-	- ./hypervisor/src/hv_impl.c
-		- twtgint_raise() で割込みが無効なタイムウィンドウの判定方法が誤っ
-		  ていた問題を修正．
+
+- 2023/03/xx 1.1 
+  - twtgint_raise() で割込みが無効なタイムウィンドウの判定方法が誤っていた問題を修正．
+    - ./hypervisor/src/hv_impl.c
+  - HVアイドル処理からのVM呼び出し機能を追加．
+  - 例外処理機能を追加．
 
 - 2022/07/28 1.0 最初のリリース
 

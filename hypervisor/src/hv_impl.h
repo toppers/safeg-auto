@@ -108,6 +108,11 @@ struct core_control_block {
      *  実行中のVMのVMID
      */
     uint8 runvmid; 
+
+    /*
+     *  IDLE処理実行中か
+     */
+    boolean runidle;
 };
 
 #endif /* TOPPERS_MACRO_ONLY */
@@ -468,6 +473,57 @@ extern void hv_twd(void);
  */
 extern void hv_idle(void);
 
+/*
+ *  VM発生のMIP/MDP例外ハンドラ（ユーザーコード）
+ */
+extern void vm_mip_handler(VMEXC_INFO *pVmexcInfo);
+
+/*
+ *  VM発生のSYSERR例外ハンドラ（ユーザーコード）
+ */
+extern void vm_syserr_handler(VMEXC_INFO *pVmexcInfo);
+
+/*
+ *  HV発生のFE例外ハンドラ（ユーザーコード）
+ */
+extern void hv_fe_handler(HVEXC_INFO *pHvexcInfo);
+
+/*
+ *  HV発生のEI例外ハンドラ（ユーザーコード）
+ */
+extern void hv_ei_handler(HVEXC_INFO *pHvexcInfo);
+
 #endif /* TOPPERS_MACRO_ONLY */
+
+/*
+ *  VMTWに割り込んだHVINTでのコンテキストのオフセット
+ */
+#define HVINT_REGBASE_SP   (0 * 4)
+#define HVINT_REGBASE_FPSR (1 * 4)
+#define HVINT_REGBASE_R31  (2 * 4)
+#define HVINT_REGBASE_R30  (3 * 4)
+#define HVINT_REGBASE_R19  (4 * 4)
+#define HVINT_REGBASE_R18  (5 * 4)
+#define HVINT_REGBASE_R17  (6 * 4)
+#define HVINT_REGBASE_R16  (7 * 4)
+#define HVINT_REGBASE_R15  (8 * 4)
+#define HVINT_REGBASE_R14  (9 * 4)
+#define HVINT_REGBASE_R13  (10 * 4)
+#define HVINT_REGBASE_R12  (11 * 4)
+#define HVINT_REGBASE_R11  (12 * 4)
+#define HVINT_REGBASE_R10  (13 * 4)
+#define HVINT_REGBASE_R9   (14 * 4)
+#define HVINT_REGBASE_R8   (15 * 4)
+#define HVINT_REGBASE_R7   (16 * 4)
+#define HVINT_REGBASE_R6   (17 * 4)
+#define HVINT_REGBASE_R5   (18 * 4)
+#define HVINT_REGBASE_R4   (19 * 4)
+#define HVINT_REGBASE_R1   (20 * 4)
+
+
+/*
+ *  TRAP0呼び出し（引数1）
+ */
+extern void cal_trap0_1(int no);
 
 #endif /* _HV_IMPL_H_ */

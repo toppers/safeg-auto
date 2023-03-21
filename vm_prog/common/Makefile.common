@@ -95,7 +95,9 @@ $(COBJS): $(OBJDIR)/%.o: %.c
 compiler_clean:
 	rm -f $(OBJDIR)/*.si $(OBJDIR)/*.dla $(OBJDIR)/*.dnm $(OBJDIR)/*.s $(OBJDIR)/*.inf \
           $(OBJDIR)/*.dbo $(OBJDIR)/*.run $(OBJDIR)/*.o \
-          $(DEPDIR)/*.d $(DEPDIR)/*.dep $(TARGET_NAME).map $(TARGET_NAME).dla $(TARGET_NAME).dnm 
+          $(DEPDIR)/*.d $(DEPDIR)/*.dep \
+          $(TARGET_NAME).map $(TARGET_NAME).dla $(TARGET_NAME).dnm \
+          $(TARGET_NAME).dep $(TARGET_NAME).run
 
 endif
 

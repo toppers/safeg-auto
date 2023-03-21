@@ -9,6 +9,18 @@
 #define USE_HVINT
 
 /*
+ *  VMのMIP/MDP例外発生時の挙動
+ */
+#define TO_MIP_RESET
+//#define TO_MIP_FAKEFE
+
+/*
+ *  VMのSYSERR例外発生時の挙動
+ */
+#define TO_SYSERR_RESET
+//#define TO_SYSERR_FAKEFE
+
+/*
  *  HVINTとして使用するTAUDとOSTMの番号
  */
 #define HVINT1_TAUDNO    9
@@ -37,6 +49,9 @@ hvint0_handler(void)
     GetCoreID(&coreid);
 
     syslog("HV%d : HVINT0 Handler.\n", coreid);
+
+    syslog("HV%d : Reset VM 1.\n", coreid);
+    ResetVM(1, 1, 0, 0, 0);
 }
 
 /*
@@ -86,6 +101,8 @@ hv_idle(void)
     while(1) {
         for(cnt_idle[coreid] = 0; cnt_idle[coreid] < 10000000U; cnt_idle[coreid]++);
         syslog("HV%d : hv_idle : running %d.\n", coreid, cnt++);
+        CallIdleVM(VMID_VM0_IDLE);
+        syslog("HV%d : hv_idle : returnd.\n", coreid);
     }
 }
 
@@ -111,6 +128,13 @@ hv_twd(void)
         for(cnt_twd[coreid] = 0; cnt_twd[coreid] < 10000000U; cnt_twd[coreid]++);
         GetHVTWTimeLeft(&time_left);
         syslog("HV%d : hv_twd : running %d : Time Left %d .\n", coreid, cnt++, time_left);
+#if 0
+        /* SYSERROR */
+        *(volatile unsigned int *)(0x00000000) = 0xff;
+        Asm("syncm");
+        /* TRAP */
+        Asm("trap 0x01");
+#endif        
     }
 }
 
@@ -157,7 +181,8 @@ startup_hook(void)
     /*
      *  HVINT0用タイマのスタート
      */
-    taud0_start_interval(taud0no, TAUD_TO_CNT((SYSTEM_INTERVAL_US/5)));
+    taud0_init(TAUD_CLK_PRS);
+    taud0_start_interval(taud0no, TAUD_TO_CNT((SYSTEM_INTERVAL_US/4)));
 #endif /* USE_HVINT */
 
     /*
@@ -186,12 +211,19 @@ startup_hook(void)
     sil_wrw_mem(PBG50_PBGPROT1_m(8), (TBIT_HV_SPID|VM0_1_SPIDLIST));
     sil_wrw_mem(PBGERRSLV50_PBGKCPROT, LOCKKEY_VAL);
 
+    /*
+     *  OSTM2へのアクセス権の設定
+     */
+    sil_wrw_mem(PBGERRSLV50_PBGKCPROT, UNLOCKKEY_VAL);
+    sil_wrw_mem(PBG50_PBGPROT1_m(9), TBIT_HV_SPID|VM0_IDLE_SPIDLIST);
+    sil_wrw_mem(PBGERRSLV50_PBGKCPROT, LOCKKEY_VAL);
+
 #if RLIN3_PORT0 == 0    
     /*
      *  RLIN30へのアクセス権の設定
      */
     sil_wrw_mem(PBGERRSLV30_PBGKCPROT, UNLOCKKEY_VAL);
-    sil_wrw_mem(PBG32_PBGPROT1_m(1), (TBIT_HV_SPID|VM0_0_SPIDLIST|VM0_1_SPIDLIST));
+    sil_wrw_mem(PBG32_PBGPROT1_m(1), (TBIT_HV_SPID|VM0_0_SPIDLIST|VM0_1_SPIDLIST|VM0_IDLE_SPIDLIST));
     sil_wrw_mem(PBGERRSLV30_PBGKCPROT, LOCKKEY_VAL);
 #endif /* RLIN3_PORT0 == 0 */
     
@@ -200,7 +232,7 @@ startup_hook(void)
      *  RLIN37へのアクセス権の設定
      */
     sil_wrw_mem(PBGERRSLV50_PBGKCPROT, UNLOCKKEY_VAL);
-    sil_wrw_mem(PBG52_PBGPROT1_m(14), (TBIT_HV_SPID|VM0_0_SPIDLIST|VM0_1_SPIDLIST));
+    sil_wrw_mem(PBG52_PBGPROT1_m(14), (TBIT_HV_SPID|VM0_0_SPIDLIST|VM0_1_SPIDLIST|VM0_IDLE_SPIDLIST));
     sil_wrw_mem(PBGERRSLV50_PBGKCPROT, LOCKKEY_VAL);    
 #endif /* RLIN3_PORT0 == 7 */
 
@@ -252,4 +284,83 @@ hvc_test3(int arg1, int arg2, int arg3)
     GetCoreID(&coreid);
 //    syslog("HV%d : hvc_test3 :  arg1 = %d,  arg2 = %d,  arg3 = %d.\n", coreid, arg1, arg2, arg3);
     return (arg1 + arg2 + arg3)*2;
+}
+
+
+/*
+ *  VM発生のMIP/MDP例外ハンドラ
+ */
+void
+vm_mip_handler(VMEXC_INFO *pVmexcInfo)
+{
+    ID coreid;
+    
+    GetCoreID(&coreid);
+    
+    syslog("HV%d : MIP Handler cause 0x%x, pc 0x%x, sp 0x%x. \n",
+           coreid, pVmexcInfo->cause, pVmexcInfo->pc,
+           *((uint32*)(pVmexcInfo->regbase + VMEXC_REGBASE_SP)));
+
+    syslog("HV%d : MIP Handler : reboot VM %d .\n", coreid, pVmexcInfo->vmid);
+
+#ifdef TO_MIP_RESET    
+    ResetVM(pVmexcInfo->vmid, 1, 0, 0, 0);
+#endif /* TO_MIP_RESET */
+#ifdef TO_MIP_FAKEFE
+    RaiseVMFakeFE(pVmexcInfo->vmid, 0x90, pVmexcInfo->cause);
+#endif /* TO_MIP_FAKEFE */    
+}
+
+/*
+ *  VM発生のSYSERR例外ハンドラ
+ */
+void
+vm_syserr_handler(VMEXC_INFO *pVmexcInfo)
+{
+    ID coreid;
+    
+    GetCoreID(&coreid);
+    
+    syslog("HV%d : SYSERR Handler cause 0x%x, pc 0x%x, sp 0x%x. \n",
+           coreid, pVmexcInfo->cause, pVmexcInfo->pc,
+           *((uint32*)(pVmexcInfo->regbase + VMEXC_REGBASE_SP)));
+
+    syslog("HV%d : SYSERR Handler : reboot VM %d .\n", coreid, pVmexcInfo->vmid);
+
+#ifdef TO_SYSERR_RESET
+    ResetVM(pVmexcInfo->vmid, 2, 0, 0, 0);
+#endif /* TO_SYSERR_RESET */
+#ifdef TO_SYSERR_FAKEFE    
+    RaiseVMFakeFE(pVmexcInfo->vmid, 0x10, pVmexcInfo->cause);
+#endif /* TO_SYSERR_FAKEFE */        
+}
+
+/*
+ *  HV発生のFE例外ハンドラ（ユーザーコード）
+ */
+void
+hv_fe_handler(HVEXC_INFO *pHvexcInfo)
+{
+    ID coreid;
+    
+    GetCoreID(&coreid);
+
+    syslog("HV%d : HV FE Handler cause 0x%x, pc 0x%x, sp 0x%x. \n",
+           coreid, pHvexcInfo->cause, pHvexcInfo->pc,
+           *((uint32*)(pHvexcInfo->regbase + HVEXC_REGBASE_SP)));
+}
+
+/*
+ *  HV発生のEI例外ハンドラ（ユーザーコード）
+ */
+void
+hv_ei_handler(HVEXC_INFO *pHvexcInfo)
+{
+    ID coreid;
+    
+    GetCoreID(&coreid);
+    
+    syslog("HV%d : HV EI Handler cause 0x%x, pc 0x%x, sp 0x%x. \n",
+           coreid, pHvexcInfo->cause, pHvexcInfo->pc,
+           *((uint32*)(pHvexcInfo->regbase + HVEXC_REGBASE_SP)));
 }

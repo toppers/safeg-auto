@@ -3,11 +3,9 @@
 #include "libguest.h"
 #include "syslog.h"
 
-#define VMNAME     "VM0_0"
-#define OSTMNO     0U
-#define TWTGINTNO  707
-
-#define GEN_MDP_ERROR
+#define VMNAME      "VM_IDLE"
+#define OSTMNO      2
+#define TWTGINTNO   717
 
 void
 ostm0_handler(void)
@@ -45,24 +43,12 @@ twtgint_handler(void)
     syslog("\n" VMNAME  " : TWTGINT Handler Start.\n");
 }
 
-/* MIP/MDP違反 */
-void
-mdp_violate(void) {
-    /* MDP違反 */
-    *(volatile unsigned int *)(0xfe030000) = 0x12;
-    /* OSTM1 へのアクセス */
-    *(volatile unsigned int *)(0xFFBF0104) = 0x00;
-    /* OSTM1 の割込みの操作 */
-    set_exint_pri(OSTM_ITNO(1), 7);
-}
-
 volatile int loop;
 
 void
 rh850_main(void)
 {
     int cnt = 0;
-    int ret;
     uint32 timeleft;
 
     syslog_init(RLIN3_PORT_NO);
@@ -86,22 +72,10 @@ rh850_main(void)
     x_set_exipm(PSW_EIMASK_ENALL);
     enable_ei();
 
-    ostm_start_interval(OSTMNO, OSTM_TO_CYC(1000000));
 
     while(1) {
         for(loop = 0; loop < 50000000U; loop++);
         GetVMTWTimeLeft(&timeleft);
         syslog(VMNAME " : running %d : Time Left %d.\n", cnt++, timeleft);
-        ret = hvc_test0();
-        syslog(VMNAME " : hvc_test0() return %d.\n", ret);
-        ret = hvc_test1(1);
-        syslog(VMNAME " : hvc_test1() return %d.\n", ret);
-        ret = hvc_test2(2,3);
-        syslog(VMNAME " : hvc_test2() return %d.\n", ret);
-        ret = hvc_test3(4,5,6);
-        syslog(VMNAME " : hvc_test3() return %d.\n", ret);
-#ifdef GEN_MDP_ERROR
-        mdp_violate();
-#endif /* GEN_MDP_ERROR */        
     }
 }

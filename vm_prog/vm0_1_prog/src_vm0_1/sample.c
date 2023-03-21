@@ -43,6 +43,13 @@ twtgint_handler(void)
 	syslog("\n" VMNAME  " : TWTGINT Handler Start.\n");
 }
 
+/* SYSERR違反 */
+void
+syserr_violate(void) {
+    /* 許可されていないアドレスをアクセス */
+    *(volatile unsigned int *)(0xFFBF4240) = 0xff;
+}
+
 volatile int loop;
 
 void
@@ -78,5 +85,8 @@ rh850_main(void)
 		for(loop = 0; loop < 50000000U; loop++);
 		GetVMTWTimeLeft(&timeleft);
 		syslog(VMNAME " : running %d : Time Left %d.\n", cnt++, timeleft);
+#ifdef GEN_SYS_ERROR
+        syserr_violate();
+#endif /* GEN_SYS_ERROR */
 	}
 }

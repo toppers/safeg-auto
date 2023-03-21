@@ -46,5 +46,12 @@
 #define CCB_SP          (4 * 2)
 #define CCB_RUNHVC      (4 * 3)
 #define CCB_RUNHVINT    (CCB_RUNHVC + 1)
+#define CCB_RUNVMID     (CCB_RUNHVINT + 1)
+#define CCB_RUNIDLE     (CCB_RUNVMID + 1)
+
+/*
+ *  HVでのFPSRの初期値
+ */
+#define HV_INIT_FPSR  0x00020000U
 
 #endif /* _HV_ASM_H_ */

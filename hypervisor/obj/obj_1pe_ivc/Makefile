@@ -42,3 +42,8 @@ LDSCRIPT = ./u2a_ghs.ld
 #  共通定義のインクルード
 #
 include $(TOP_DIR)/src/Makefile.hv
+
+#
+#  コンフィギュレータ入力ファイル
+#
+CFG_INPUT = sample1.yaml

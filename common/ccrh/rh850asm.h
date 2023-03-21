@@ -36,6 +36,7 @@ rpeid .macro destination
     pswh    .set    15
     ctpc    .set    16
     eipswh  .set    18
+    fepswh  .set    19
     eiwr    .set    28
     fewr    .set    29
 #endif /* _RH850ASM_H_ */

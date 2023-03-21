@@ -18,6 +18,9 @@
 #define PSW_GPID_BIT        (8U)
 #define PSW_GM_MASK         (1U << 31)
 
+#define PSW_NP_BIT          (7U)
+#define PSW_NP_MASK         (1U << PSW_NP_BIT)
+
 #define PSW_ID_BIT          (5U)
 #define PSW_ID_MASK         (1U << PSW_ID_BIT)
 
@@ -53,7 +56,8 @@
 #define MCR_HUWE_MASK  (1U<<25)
 #define MCR_HURE_MASK  (1U<<24)
 
-#define GMCFG_HMP_MASK  (1U<<1)
+#define GMCFG_HMP_MASK    (1U<<1U)
+#define GMCFG_GSYSE_MASK  (1U<<4U)
 #define GMCFG_GCU0_MASK (1U<<16U)
 
 #define TNUM_MPU        (32U)
@@ -61,6 +65,18 @@
 #define TMIN_EIIC_EIINT_NO    (0x1000U)
 
 #define NUMBER_OF_CACHELINE   (128U)
+
+#define DECFG_EHE   (1U << 2U)
+#define DECFG_EGE   (1U << 1U)
+#define DECFG_ESE   (1U << 0U)
+
+#define MIN_MIPMDP_EXCNO   0x90U
+#define MAX_MIPMDP_EXCNO   0x9DU
+
+#define MIN_SYSERR_EXCNO   0x10U
+#define MAX_SYSERR_EXCNO   0x1FU
+
+#define EXCNO_MASK         0xFFU
 
 #ifndef TOPPERS_MACRO_ONLY
 
@@ -119,6 +135,24 @@ get_pswh(void)
     return __STSR(15, 0);
 }
 
+LOCAL_INLINE uint32_t
+get_fepc(void)
+{
+    return __STSR(2, 0);
+}
+
+LOCAL_INLINE uint32_t
+get_fepsw(void)
+{
+    return __STSR(3, 0);
+}
+
+LOCAL_INLINE uint32_t
+get_feic(void)
+{
+    return __STSR(14, 0);
+}
+
 LOCAL_INLINE void
 set_fepswh(uint32_t fepswh)
 {
@@ -135,6 +169,30 @@ LOCAL_INLINE void
 set_fepsw(uint32_t fepsw)
 {
     __LDSR(3, 0, fepsw);
+}
+
+LOCAL_INLINE uint32_t
+get_eipc(void)
+{
+    return __STSR(0, 0);
+}
+
+LOCAL_INLINE uint32_t
+get_eipsw(void)
+{
+    return __STSR(1, 0);
+}
+
+LOCAL_INLINE void
+set_eipc(uint32_t pc)
+{
+    __LDSR(0, 0, pc);
+}
+
+LOCAL_INLINE void
+set_eipsw(uint32_t eipsw)
+{
+    __LDSR(1, 0, eipsw);
 }
 
 LOCAL_INLINE void
@@ -306,6 +364,136 @@ LOCAL_INLINE uint32_t
 get_icctrl(void)
 {
     return __STSR(24, 4);
+}
+
+
+LOCAL_INLINE void
+set_decfg(uint32_t decfg)
+{
+    __LDSR(16, 13, decfg);
+}
+
+LOCAL_INLINE uint32_t
+get_decfg(void)
+{
+    return __STSR(16, 13);
+}
+
+LOCAL_INLINE void
+set_dectrl(uint32_t dectrl)
+{
+    __LDSR(17, 13, dectrl);
+}
+
+LOCAL_INLINE uint32_t
+get_dectrl(void)
+{
+    return __STSR(17, 13);
+}
+
+LOCAL_INLINE void
+set_devds(uint32_t devds)
+{
+    __LDSR(18, 13, devds);
+}
+
+LOCAL_INLINE uint32_t
+get_devds(void)
+{
+    return __STSR(18, 13);
+}
+
+/*
+ *  Gust Context
+ */
+LOCAL_INLINE void
+set_gmeipc(uint32_t gmeipc)
+{
+    __LDSR(0, 9, gmeipc);
+}
+
+LOCAL_INLINE uint32_t
+get_gmeipc(void)
+{
+    return __STSR(0, 9);
+}
+
+LOCAL_INLINE void
+set_gmeipsw(uint32_t gmeipsw)
+{
+    __LDSR(1, 9, gmeipsw);
+}
+
+LOCAL_INLINE uint32_t
+get_gmeipsw(void)
+{
+    return __STSR(1, 9);
+}
+
+LOCAL_INLINE void
+set_gmfepc(uint32_t fepc)
+{
+    __LDSR(2, 9, fepc);
+}
+
+LOCAL_INLINE uint32_t
+get_gmfepc(void)
+{
+    return __STSR(2, 9);
+}
+
+LOCAL_INLINE void
+set_gmfepsw(uint32_t fepsw)
+{
+    __LDSR(3, 9, fepsw);
+}
+
+LOCAL_INLINE uint32_t
+get_gmfepsw(void)
+{
+    return __STSR(3, 9);
+}
+
+LOCAL_INLINE void
+set_gmpsw(uint32_t gmpsw)
+{
+    __LDSR(5, 9, gmpsw);
+}
+
+LOCAL_INLINE uint32_t
+get_gmpsw(void)
+{
+    return __STSR(5, 9);
+}
+
+LOCAL_INLINE void
+set_gmeiic(uint32_t gmeiic)
+{
+    __LDSR(13, 9, gmeiic);
+}
+
+LOCAL_INLINE uint32_t
+get_gmeiic(void)
+{
+    return __STSR(13, 9);
+}
+
+LOCAL_INLINE void
+set_gmfeic(uint32_t gmfeic)
+{
+    __LDSR(14, 9, gmfeic);
+}
+
+LOCAL_INLINE uint32_t
+get_gmfeic(void)
+{
+    return __STSR(14, 9);
+}
+
+LOCAL_INLINE uint32_t
+get_gmebase(void)
+{
+    return __STSR(19, 9);
 }
 
 /*

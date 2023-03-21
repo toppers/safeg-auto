@@ -57,6 +57,7 @@ hv_init(void)
     uint32        intno;
     uint32        gpid;
     ID            coreid;
+    uint32        reg_lp;
 #ifdef SUPPORT_SBUF
     uint32        sbuflp;
 #endif /* SUPPORT_SBUF */
@@ -77,6 +78,7 @@ hv_init(void)
      */
     p_my_ccb->runhvc = false;
     p_my_ccb->runhvint = false;
+    p_my_ccb->runidle = false;
 
     /*
      *  各VMの初期化
@@ -117,6 +119,10 @@ hv_init(void)
             p_vmcb->s_sysreg[RBCR0_NO] = RBCR0_INIT;
             p_vmcb->s_sysreg[RBCR1_NO] = RBCR1_INIT;
             p_vmcb->s_sysreg[RBNR_NO] = RBNR_INIT;
+
+            for (reg_lp = 0; reg_lp < TNUM_REG; reg_lp++) {
+                p_vmcb->reg[reg_lp] = 0U;
+            }
 #ifdef SUPPORT_SBUF
             for (sbuflp = 0; sbuflp < TNUM_HEMPU_SBUF; sbuflp++) {
                 p_vmcb->sbufmpu[sbuflp].mpat = 0U;
@@ -167,6 +173,13 @@ hv_init(void)
      *   GCPU0=1 : 仮想マシンからFPUのみアクセス可能に
      */
     set_gmcfg(get_gmcfg()|GMCFG_GCU0_MASK);
+
+    /*
+     *  SYSERR例外関連の初期化
+     */
+    set_decfg(DECFG_EHE|DECFG_EGE|DECFG_ESE);
+    /* SYSERR例外発生時はホストに遷移 */      
+    set_gmcfg(get_gmcfg()|GMCFG_GSYSE_MASK);
 }
 
 /*
@@ -400,6 +413,15 @@ sguard_init(void)
     sil_wrw_mem(PBGERRSLV00_PBGKCPROT, LOCKKEY_VAL);
 
     /*
+     *  ECMへのアクセス権の設定
+     */
+    sil_wrw_mem(PBGERRSLV00_PBGKCPROT, UNLOCKKEY_VAL);
+    sil_wrw_mem(PBG00_PBGPROT0_m(0)  , CPCR_GEN|CPCR_DBG|CPCR_RG);
+    sil_wrw_mem(PBG00_PBGPROT1_m(0)  , TBIT_HV_SPID);    
+    sil_wrw_mem(PBGERRSLV00_PBGKCPROT, LOCKKEY_VAL);
+    
+    
+    /*
      *  省略....
      */
 
@@ -440,7 +462,7 @@ update_p_runvm(CCB *p_my_ccb)
  *  VMタイムウィンドウへの遷移
  */
 static void
-vmtwd_start(uint32_t my_coreid, CCB *p_my_ccb)
+vmtwd_start(uint32_t my_coreid, CCB *p_my_ccb, boolean istwtimer)
 {
     /* 
      *  VMTWD実行中のホストモードのPSWの値
@@ -460,7 +482,7 @@ vmtwd_start(uint32_t my_coreid, CCB *p_my_ccb)
     set_mpu_sbuf((uint32*)(p_my_ccb->p_runvm->sbufmpu));
 #endif /* SUPPORT_SBUF */
       
-    if ((TBIT_SINGLEVM_CORE & (1 << my_coreid)) == 0) {
+    if (istwtimer && (TBIT_SINGLEVM_CORE & (1 << my_coreid)) == 0) {
         /*
          *  タイムウィンドウタイマのスタート
          */
@@ -535,6 +557,11 @@ scyc_switch(void)
 #endif /* ENABLE_SYSC_SWITCH_HOOK */
 
     /*
+     *   IDLE処理終了
+     */
+    p_my_ccb->runidle = false;
+
+    /*
      *  システム周期タイマのクリア
      */
     sysctimer_clearint(my_coreid);
@@ -564,13 +591,14 @@ scyc_switch(void)
      */
     if (p_my_ccb->p_runvm != NULL) {
         /* VMTWへの遷移の場合 */
-        vmtwd_start(my_coreid, p_my_ccb);
+        vmtwd_start(my_coreid, p_my_ccb, true);
     } else if (p_my_ccb->p_runtwd != NULL) {
         /* HVTWへの遷移の場合 */
         hvtwd_start(my_coreid, p_my_ccb);
     }
 
     /* IDLEの場合はリターン */
+    p_my_ccb->runidle = true;
 }
 
 /*
@@ -618,37 +646,47 @@ twd_switch(void)
 
     if (p_my_ccb->p_runvm != NULL) {
         /* VMTWへの遷移の場合 */
-        vmtwd_start(my_coreid, p_my_ccb);
+        vmtwd_start(my_coreid, p_my_ccb, true);
     } else if (p_my_ccb->p_runtwd != NULL) {
         /* HVTWへの遷移の場合 */
         hvtwd_start(my_coreid, p_my_ccb);
     }
 
     /* IDLEの場合はリターン */
+    p_my_ccb->runidle = true;
 }
 
 /*
- *  HV割込みの呼び出し処理
+ *  IDLE-VMへの切り替え
  */
 void
-call_hvint(boolean pausetwt)
+switch_to_idle_vm(ID vmid)
 {
-    uint    my_coreid = get_my_coreid();
-    uint    intno;
-    FP        handler;
-    uint    time_left;
+    CCB       *p_my_ccb = get_my_ccb();
+    uint32    my_coreid = get_my_coreid();
 
-    /* シングルVMなら状況によらずタイマ操作しない */
-    if ((TBIT_SINGLEVM_CORE & (1 << my_coreid)) != 0) {
-        pausetwt = false;
-    }
+    DEBUGOUT("switch_to_idle_vm(void) : timer window handler start.\n\r");
 
     /*
-     * タイムウィンドウ周期用タイマの停止
+     *  p_runvmの更新
+     *  vmidはチェック済み
      */
-    if (pausetwt) {
-        time_left = twdtimer_pause(my_coreid);
-    }
+    p_my_ccb->p_runvm = get_vmcb(vmid);
+    p_my_ccb->runvmid = vmid;
+
+    /* VMTWへの遷移の場合 */
+    vmtwd_start(my_coreid, p_my_ccb, false);
+
+    /* ここには来ない */
+    while(1);
+}
+
+static void
+call_hvint(void) {
+    uint    my_coreid = get_my_coreid();
+    uint    intno;
+    FP      handler;
+    CCB   *p_my_ccb = get_my_ccb();
 
     /* 割込み要因の取得 */
     intno = get_eiic();
@@ -663,13 +701,106 @@ call_hvint(boolean pausetwt)
 
     /* ハンドラ呼び出し */
     (handler)();
+}
+
+/*
+ *  HV割込みの呼び出し処理
+ */
+void
+call_hvint_in_vmtw(uint32 reg_base)
+{
+    uint    my_coreid = get_my_coreid();
+    uint    time_left;
+    CCB   *p_my_ccb = get_my_ccb();
+    VMCB   *p_vmcb = p_my_ccb->p_runvm;
+    boolean pausetwt;
+    
+    /* シングルVMなら状況によらずタイマ操作しない */
+    if ((TBIT_SINGLEVM_CORE & (1 << my_coreid)) != 0) {
+        pausetwt = false;
+    }
 
     /*
-     * タイムウィンドウ周期用タイマの再開
+     *  TWタイマの停止
+     */
+    if (pausetwt) {
+        time_left = twdtimer_pause(my_coreid);
+    }
+
+    /*
+     * ResetVM()/RasieVMFakeFE()/RaiseVMFakeEI() で設定する可能性のある
+     * レジスタをVMCBに書き込む
+     */  
+    p_vmcb->reg[6] = *(uint32*)(reg_base + HVINT_REGBASE_R6);
+    p_vmcb->reg[7] = *(uint32*)(reg_base + HVINT_REGBASE_R7);
+    p_vmcb->reg[8] = *(uint32*)(reg_base + HVINT_REGBASE_R8);
+    p_vmcb->reg[9] = *(uint32*)(reg_base + HVINT_REGBASE_R9);    
+    p_vmcb->pc = get_eipc();
+    p_vmcb->d_sysreg[GMPSW_NO] = get_gmpsw();
+    p_vmcb->d_sysreg[GMFEIC_NO] = get_gmfeic();
+    p_vmcb->d_sysreg[GMEIIC_NO] = get_gmeiic();
+    p_vmcb->d_sysreg[GMFEPSW_NO] = get_gmfepsw();
+    p_vmcb->d_sysreg[GMFEPC_NO] = get_gmfepc();
+    p_vmcb->d_sysreg[GMEIPSW_NO] = get_gmeipsw();
+    p_vmcb->d_sysreg[GMEIPC_NO] = get_gmeipc();
+
+    call_hvint();
+
+    /*
+     * ResetVM()/RasieVMFakeFE()/RaiseVMFakeEI() で設定された可能性のある
+     * レジスタを書き戻す
+     */
+    *(uint32*)(reg_base + HVINT_REGBASE_R6) =  p_vmcb->reg[6];
+    *(uint32*)(reg_base + HVINT_REGBASE_R7) =  p_vmcb->reg[7];
+    *(uint32*)(reg_base + HVINT_REGBASE_R8) =  p_vmcb->reg[8];
+    *(uint32*)(reg_base + HVINT_REGBASE_R9) =  p_vmcb->reg[9];
+    set_eipc(p_vmcb->pc);
+    set_gmeipc(p_vmcb->d_sysreg[GMEIPC_NO]);
+    set_gmeipsw(p_vmcb->d_sysreg[GMEIPSW_NO]);
+    set_gmfepc(p_vmcb->d_sysreg[GMFEPC_NO]);
+    set_gmfepsw(p_vmcb->d_sysreg[GMFEPSW_NO]);    
+    set_gmpsw(p_vmcb->d_sysreg[GMPSW_NO]);
+    set_gmeiic(p_vmcb->d_sysreg[GMEIIC_NO]);
+    set_gmfeic(p_vmcb->d_sysreg[GMFEIC_NO]);    
+
+    /*
+     * TWタイマの再開
      */
     if (pausetwt) {
         twdtimer_continue(my_coreid, time_left);
     } 
+}
+
+/*
+ *  HV割込みの呼び出し処理
+ */
+void
+call_hvint_in_idle(void)
+{
+    call_hvint();
+}
+
+/*
+ *  HV割込みの呼び出し処理
+ */
+void
+call_hvint_in_hvtw(void)
+{
+    uint    my_coreid = get_my_coreid();
+    uint    time_left;
+    CCB   *p_my_ccb = get_my_ccb();
+    
+    /*
+     *  TWタイマの停止
+     */
+    time_left = twdtimer_pause(my_coreid);
+
+    call_hvint();
+
+    /*
+     * TWタイマの再開
+     */
+    twdtimer_continue(my_coreid, time_left);
 }
 
 /*
@@ -700,4 +831,107 @@ error_call_scyc_handler_hvtwd(void)
 {
     uart_puts(0, "error_call_scyc_handler_hvtwd() : SCYCD Handler is called at hv time window!\n\r");
     while(1);
+}
+
+/*
+ *  VMで発生した例外のハンドラ
+ *  FE例外を前提（MIP/MDP, SYSERR）
+ */
+void
+call_vm_exc_handler(uint32 reg_base)
+{
+    CCB   *p_my_ccb = get_my_ccb();
+    uint32_t cause_no;
+    VMEXC_INFO vmexc_info;
+    VMCB   *p_vmcb = p_my_ccb->p_runvm;
+      
+    /* VM発生の例外情報の設定 */
+    vmexc_info.cause = get_feic();
+    vmexc_info.vmid = p_my_ccb->runvmid;
+    vmexc_info.pc = get_fepc();
+    vmexc_info.psw = get_fepsw();
+    vmexc_info.regbase = reg_base;
+
+    /*
+     * ResetVM()/RasieVMFakeFE()/RaiseVMFakeEI() で設定する可能性のある
+     * レジスタをVMCBに書き込む
+     */  
+    p_vmcb->reg[6] = *(uint32*)(reg_base + VMEXC_REGBASE_R6);
+    p_vmcb->reg[7] = *(uint32*)(reg_base + VMEXC_REGBASE_R7);
+    p_vmcb->reg[8] = *(uint32*)(reg_base + VMEXC_REGBASE_R8);
+    p_vmcb->reg[9] = *(uint32*)(reg_base + VMEXC_REGBASE_R9);    
+    p_vmcb->pc = get_fepc();
+    p_vmcb->d_sysreg[GMPSW_NO] = get_gmpsw();
+    p_vmcb->d_sysreg[GMFEIC_NO] = get_gmfeic();
+    p_vmcb->d_sysreg[GMEIIC_NO] = get_gmeiic();
+    p_vmcb->d_sysreg[GMFEPSW_NO] = get_gmfepsw();
+    p_vmcb->d_sysreg[GMFEPC_NO] = get_gmfepc();
+    p_vmcb->d_sysreg[GMEIPSW_NO] = get_gmeipsw();
+    p_vmcb->d_sysreg[GMEIPC_NO] = get_gmeipc();
+      
+    /* ユーザーハンドラ呼び出し */
+    cause_no = vmexc_info.cause & EXCNO_MASK;
+    if ((MIN_MIPMDP_EXCNO <= cause_no) && (MAX_MIPMDP_EXCNO >= cause_no)) {
+        vm_mip_handler(&vmexc_info);
+    }
+    else if ((MIN_SYSERR_EXCNO <= cause_no) && (MAX_SYSERR_EXCNO >= cause_no)) {
+        vm_syserr_handler(&vmexc_info);
+    }
+    else {
+        while(1);
+    }
+
+    /*
+     * ResetVM()/RasieVMFakeFE()/RaiseVMFakeEI() で設定された可能性のある
+     * レジスタを書き戻す
+     */
+   *(uint32*)(reg_base + VMEXC_REGBASE_R6) =  p_vmcb->reg[6];
+   *(uint32*)(reg_base + VMEXC_REGBASE_R7) =  p_vmcb->reg[7];
+   *(uint32*)(reg_base + VMEXC_REGBASE_R8) =  p_vmcb->reg[8];
+   *(uint32*)(reg_base + VMEXC_REGBASE_R9) =  p_vmcb->reg[9];
+
+    set_fepc(p_vmcb->pc);
+    set_gmeipc(p_vmcb->d_sysreg[GMEIPC_NO]);
+    set_gmeipsw(p_vmcb->d_sysreg[GMEIPSW_NO]);
+    set_gmfepc(p_vmcb->d_sysreg[GMFEPC_NO]);
+    set_gmfepsw(p_vmcb->d_sysreg[GMFEPSW_NO]);    
+    set_gmpsw(p_vmcb->d_sysreg[GMPSW_NO]);
+    set_gmeiic(p_vmcb->d_sysreg[GMEIIC_NO]);
+    set_gmfeic(p_vmcb->d_sysreg[GMFEIC_NO]);        
+}
+
+
+/*
+ *  HVで発生したFE例外のハンドラ
+ */
+void
+call_hv_fe_handler(uint32 reg_base)
+{
+    HVEXC_INFO hvexc_info;
+
+    /* VM発生の例外情報の設定 */
+    hvexc_info.cause = get_feic();
+    hvexc_info.pc = get_fepc();
+    hvexc_info.psw = get_fepsw();
+    hvexc_info.regbase = reg_base;
+
+    /* ユーザーハンドラ呼び出し */
+    hv_fe_handler(&hvexc_info);
+}
+
+/*
+ *  HVで発生したEI例外のハンドラ
+ */
+void
+call_hv_ei_handler(uint32 reg_base)
+{
+    HVEXC_INFO hvexc_info;
+
+    hvexc_info.cause = get_eiic();
+    hvexc_info.pc = get_eipc();
+    hvexc_info.psw = get_eipsw();
+    hvexc_info.regbase = reg_base;
+
+    /* ユーザーハンドラ呼び出し */
+    hv_ei_handler(&hvexc_info);
 }
