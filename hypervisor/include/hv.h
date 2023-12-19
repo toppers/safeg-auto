@@ -14,7 +14,7 @@
 /*
  *  起動処理（startup.c）
  */
-extern void StartHV(uint32 mode);
+extern void StartHV(ID SystemModeID);
 
 /*
  *  コアIDの取得（hv_service.c）
@@ -29,7 +29,7 @@ extern ER GetHVTWTimeLeft(uint32* pTimeLeft);
 /*
  *  VMのリセット（hv_service.c）
  */
-extern ER ResetVM(ID VMID, uint32 arg0, uint32 arg1, uint32 arg2, uint32 arg3);
+extern ER ResetVM(ID vmid, uint32 arg0, uint32 arg1, uint32 arg2, uint32 arg3);
 
 /*
  *  VMへのフェイクFE例外の発生（hv_service.c）
@@ -45,6 +45,17 @@ extern ER RaiseVMFakeEI(ID vmid, uint32 voffset, uint32 cause);
  *  IDLE-VMの呼び出し
  */
 extern ER CallIdleVM(ID vmid);
+
+/*
+ *  システム動作モードの設定
+ */
+extern ER ChangeSystemOperationMode(ID somid);
+
+
+/*
+ *  システム動作モードの参照
+ */
+extern ER GetSystemOperationMode(ID *p_somid);
 
 /*
  *  VM発生の例外情報

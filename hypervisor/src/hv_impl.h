@@ -29,6 +29,11 @@
 #define TMIN_VMID    (1U)
 
 /*
+ *  SOMIDの最小値
+ */
+#define TMIN_SOMID    (1U)
+
+/*
  *  VM切替時のMPUのホストエントリの開始番号
  */
 #define TMIN_HEMPU    0
@@ -71,6 +76,7 @@ typedef struct hempu_initialization_block HEMPUINIB;
 typedef struct vm_control_block VMCB;
 typedef struct twd_initialization_block TWDINIB;
 typedef struct core_control_block CCB;
+typedef struct system_operation_mode_initialization_block SOMINIB;
 
 /*
  *  コア管理ブロック（CCB）の定義
@@ -113,6 +119,11 @@ struct core_control_block {
      *  IDLE処理実行中か
      */
     boolean runidle;
+
+	/*
+	 *  現在のシステム動作モード
+	 */
+	const SOMINIB *p_cursom;
 };
 
 #endif /* TOPPERS_MACRO_ONLY */
@@ -290,6 +301,11 @@ extern VMCB *const p_vmcb_table[];
 #define VMID(p_vmcb)    ((ID)(((p_vmcb)->p_vminib - vminib_table) + TMIN_VMID))
 
 /*
+ *  VMIDのチェック
+ */
+#define VALID_VMID(vmid)	(TMIN_VMID <= (vmid) && (vmid) <= TNUM_VM)
+
+/*
  * VM割込み初期化ブロック
  */
 typedef struct {
@@ -391,6 +407,31 @@ extern void barrier_sync(uint phase);
 extern void scyc_barrier_sync(uint phase);
 
 /*
+ *  スピンロック取得
+ */
+LOCAL_INLINE void
+acquire_lock(uint32 *p_lock)
+{
+    while (1) {
+        if (acquire_lock_ldlstc(p_lock) != false) {
+            /* ロック取得成功 */
+            MEMORY_CHANGED;
+            return;
+        }
+    }
+}
+
+/*
+ *  スピンロックの解放
+ */
+LOCAL_INLINE void
+release_lock(uint32 *p_lock)
+{
+    MEMORY_CHANGED;
+    release_lock_ldlstc(p_lock);
+}
+
+/*
  *  HV割込み初期化ブロック
  */
 typedef struct hvint_initialization_block {
@@ -437,6 +478,13 @@ extern void *const hvc_table[];
  *  起動時の同期用変数 
  */
 extern uint32 bootsync;
+
+#if TNUM_SUPPORT_CORE > 1
+/*
+ *  ジャイアントロック変数
+ */
+extern uint32 giant_lock;
+#endif /* TNUM_SUPPORT_CORE > 1 */
 
 /*
  *  VMタイムウィンドウへの遷移（hv_support.S）
@@ -520,10 +568,57 @@ extern void hv_ei_handler(HVEXC_INFO *pHvexcInfo);
 #define HVINT_REGBASE_R4   (19 * 4)
 #define HVINT_REGBASE_R1   (20 * 4)
 
-
 /*
  *  TRAP0呼び出し（引数1）
  */
 extern void cal_trap0_1(int no);
+
+/*
+ *  システム動作モード初期化ブロック
+ */
+struct system_operation_mode_initialization_block {
+    const TWDINIB *p_twdinib[TNUM_PHYS_CORE]; /* タイムウィンドウ初期化ブロック */
+};
+
+/*
+ *  現在のシステム動作モード
+ *
+ *  現在のシステム全体でのシステム動作モードの初期化ブロックを指すポイ
+ *  ンタ．
+ */
+extern const SOMINIB *p_global_cursom;
+
+/*
+ *  次のシステム動作モード
+ */
+extern const SOMINIB *p_global_nxtsom;
+
+/*
+ *  システム周期切換えを実行したプロセッサ（ビットマップ）
+ */
+extern uint32_t scycprc_bitmap;
+
+/*
+ *  システム動作モード初期化ブロックのエリア（hv_cfg.c）
+ */
+extern const SOMINIB	sominib_table[];
+
+/*
+ *  システム動作モードIDからシステム動作モード初期化ブロックを取り出す
+ *  ためのマクロ
+ */
+#define INDEX_SOM(somid)	((uint32)((somid) - TMIN_SOMID))
+#define get_sominib(somid)	(&(sominib_table[INDEX_SOM(somid)]))
+
+/*
+ *  システム動作モード初期化ブロックからシステム動作モードIDを取り出す
+ *  ためのマクロ
+ */
+#define	SOMID(p_sominib)	((ID)(((p_sominib) - sominib_table) + TMIN_SOMID))
+
+/*
+ *  SOMIDのチェック
+ */
+#define VALID_SOMID(somid)	(TMIN_SOMID <= (somid) && (somid) <= TNUM_SOM)
 
 #endif /* _HV_IMPL_H_ */

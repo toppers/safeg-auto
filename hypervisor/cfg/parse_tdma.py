@@ -15,6 +15,7 @@ from cfg import *
 from cfg_tdma import *
 from cfg_schedule import *
 from cfg_timewin import *
+from cfg_som import *
 
 from error import *
 
@@ -29,7 +30,8 @@ class Parser_TDMA_t(ParserBase_t):
 	def Parse(self, node: Node_t) -> None:
 		#有効キーワード
 		keys = [NodeDef_t(CFG_KW_SYS_INTERVAL,	True),
-				NodeDef_t(CFG_KW_SCHEDULE_TBL,	True)]
+				NodeDef_t(CFG_KW_SOM,			True)]
+
 		#キーワードチェック
 		node.chkKeyword(keys)
 
@@ -39,14 +41,53 @@ class Parser_TDMA_t(ParserBase_t):
 		#SystemIntervalUS
 		interval = node.getInt(CFG_KW_SYS_INTERVAL)
 		tdma.Interval = interval
+		
+		#SystemOperationMode
+		nodeSystemOperationMode = node.get(CFG_KW_SOM)
+		if nodeSystemOperationMode:
+			tdma.SystemOperationModes = self.parseSystemOperationMode(nodeSystemOperationMode, interval)
 
-		#ScheduleTable
-		nodeSchTbl = node.get(CFG_KW_SCHEDULE_TBL)
-		if nodeSchTbl:
-			tdma.Schedules = self.parseScheduleTbl(nodeSchTbl, interval)
+		#コア毎のタイムウィンドウ数を取得
+		for som in tdma.SystemOperationModes.values():
+			for sched in som.Schedules.values():
+				if (sched.Core.ID in tdma.NumTW):
+					tdma.NumTW[sched.Core.ID] += len(sched.TimeWins)
+				else:
+					tdma.NumTW[sched.Core.ID] = len(sched.TimeWins)
 
 		return
 
+	#SystemOperationModeノード
+	def parseSystemOperationMode(self, nodes: Node_t, sysInterval: int) -> Dict[str, Som_t]:
+		keys = [NodeDef_t(CFG_KW_NAME,			True),
+				NodeDef_t(CFG_KW_SCHEDULE_TBL,	True)]
+
+		soms: Dict[str, Som_t] = OrderedDict()
+		
+		for node in nodes.array():
+			#有効キーワードチェック
+			node.chkKeyword(keys)
+
+			#ID
+			#err:SOMIDが識別子として無効
+			name = node.getIdentifier(CFG_KW_NAME)
+			if name:
+				#err:同名のオブジェクトが存在するか
+				self.Cfg.existName(name, node.LastName)
+
+			#SOMオブジェクト生成
+			som = Som_t(name)
+			
+			#ScheduleTable
+			nodeSchTbl = node.get(CFG_KW_SCHEDULE_TBL)
+			if nodeSchTbl:
+				som.Schedules = self.parseScheduleTbl(nodeSchTbl, sysInterval)
+
+			#同じ名前がなければ追加
+			if name and not name in soms:
+				soms[name] = som
+
+		return soms
 
 	#ScheduleTableノード
 	def parseScheduleTbl(self, nodes: Node_t, sysInterval: int) -> Dict[int, Schedule_t]:

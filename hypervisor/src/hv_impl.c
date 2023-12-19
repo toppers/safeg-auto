@@ -7,11 +7,35 @@
  */
 uint32_t bootsync;
 
+#if TNUM_SUPPORT_CORE > 1
+/*
+ *  ジャイアントロック変数
+ */
+uint32 giant_lock;
+#endif /* TNUM_SUPPORT_CORE > 1 */
+
 /*
  *  バリア同期用変数
  */
 static volatile uint32_t    core_phase[TNUM_PHYS_CORE];
 static volatile uint32_t    sys_phase;
+
+/*
+ *  現在のシステム動作モード
+ */
+const SOMINIB *p_global_cursom;
+
+/*
+ *  次のシステム動作モード
+ */
+const SOMINIB *p_global_nxtsom;
+
+#if TNUM_SUPPORT_CORE > 1
+/*
+ *  システム周期切換えを実行したプロセッサ（ビットマップ）
+ */
+uint32_t scycprc_bitmap;
+#endif /* TNUM_SUPPORT_CORE > 1 */
 
 /*
  *  バリア同期
@@ -539,6 +563,50 @@ twtgint_raise(CCB* p_my_ccb)
 }
 
 /*
+ * システム動作モードの更新
+ */
+#if TNUM_SUPPORT_CORE > 1
+static void 
+update_cursom(CCB *p_my_ccb)
+{
+    /*
+     * コア間ロックの取得
+     */
+    acquire_lock(&giant_lock);
+
+    /*
+     *  システム動作モードの変更
+     */
+    if (scycprc_bitmap == 0U) {
+        /*
+         *  最初にシステム周期を切り換えるプロセッサの場合
+         */
+        p_global_cursom = p_global_nxtsom;
+    }
+    scycprc_bitmap |= (1U << get_my_coreid());
+    if (scycprc_bitmap == (TBIT_SUPPORT_CORE & ~TBIT_SINGLEVM_CORE)) {
+        /*
+         *  最後にシステム周期を切り換えるプロセッサの場合
+         */
+        scycprc_bitmap = 0U;
+    }
+    p_my_ccb->p_cursom = p_global_cursom;
+
+    /*
+     * コア間ロックの解放
+     */
+    release_lock(&giant_lock);
+}
+#else /* !TNUM_SUPPORT_CORE > 1 */
+static void 
+update_cursom(CCB *p_my_ccb)
+{
+    p_global_cursom = p_global_nxtsom;
+    p_my_ccb->p_cursom = p_global_cursom;
+}
+#endif /* TNUM_SUPPORT_CORE > 1 */
+
+/*
  *  システム周期切換え処理
  *
  *  この関数は，CPUロック状態で呼び出される．
@@ -572,9 +640,14 @@ scyc_switch(void)
     DEBUGOUT("scyc_switch() : sytem cycle handler start.\n\r");
 
     /*
+     * システム動作モードの更新
+     */
+    update_cursom(p_my_ccb);
+
+    /*
      *  p_runtwdの更新
      */
-    p_my_ccb->p_runtwd = &((get_my_twdinib())[0]);
+    p_my_ccb->p_runtwd = &(p_my_ccb->p_cursom->p_twdinib[my_coreid])[0];
 
     /*
      *  タイムウィンドウトリガ割込みの発生

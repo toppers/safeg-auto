@@ -69,6 +69,10 @@ class Cfg_t:
 		for (i, hvc) in enumerate(self.HV.AllHVCs):
 			hvc.ID = i
 
+		#SOMのID割り当て 1～
+		for (i, som) in enumerate(self.TDMA.SystemOperationModes.values()):
+			som.ID = i + 1	#1～
+
 		return
 
 

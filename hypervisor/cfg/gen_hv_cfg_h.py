@@ -55,7 +55,7 @@ def Generate(file: TextIO, cfg: Cfg_t):
 
 	#VM数
 	defs.PutNL()
-	defs.PutSNL(outDefine(f'TNUM_VM      ', f'{len(cfg.VMs)}'))
+	defs.PutSNL(outDefine(f'TNUM_VM ', f'{len(cfg.VMs)}'))
 	for core in cfg.HV.Cores.values():
 		defs.PutSNL(outDefine(f'TNUM_VM_CORE{core.ID}', f'{len(core.VMs)}'))
 
@@ -107,14 +107,24 @@ def Generate(file: TextIO, cfg: Cfg_t):
 
 	#タイムウインドウ数
 	defs.PutNL()
-	for sched in cfg.TDMA.Schedules.values():
-		defs.PutSNL(outDefine(f'TNUM_TW_CORE{sched.Core.ID}', f'{len(sched.TimeWins)}'))
+	for coreID, numtw in cfg.TDMA.NumTW.items():
+		defs.PutSNL(outDefine(f'TNUM_TW_CORE{coreID}', f'{numtw}'))
 	defs.PutNL()
 
 	#システム周期
 	defs.PutSNL(outDefine(f'SYSTEM_INTERVAL_US', f'{cfg.TDMA.Interval}U'))
+
+	#SOM数
+	defs.PutNL()
+	defs.PutSNL(outDefine(f'TNUM_SOM ', f'{len(cfg.TDMA.SystemOperationModes)}'))
 	defs.PutNL()
 
+	#SOMID
+	for som in cfg.TDMA.SystemOperationModes.values():
+		defs.PutSNL(outDefine(f'{som.defSOMID()}', f'{som.defSOMID(True)}'))
+	defs.PutNL()
+
+	
 	#########################
 	#VCOM
 

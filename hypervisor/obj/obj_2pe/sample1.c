@@ -64,6 +64,8 @@ hvint1_handler(void)
     syslog("HV%d : HVINT1 Handler.\n", coreid);
 }
 
+int twdint_handler_cnt = 0;
+
 /*
  *  タイムウィンドウトリガ割込みハンドラ
  */
@@ -75,6 +77,18 @@ twdint_handler(void)
     GetCoreID(&coreid);
 
     syslog("\nHV%d : TWTGINT Handler.\n", coreid);
+
+    twdint_handler_cnt++;
+
+    if (twdint_handler_cnt == 2) {
+        syslog("HV%d : TWTGINT Handler : ChangeSystemOperationMode(2).\n", coreid);
+        ChangeSystemOperationMode(2);
+    }
+    else if (twdint_handler_cnt == 4) {        
+        syslog("HV%d : TWTGINT Handler : ChangeSystemOperationMode(1).\n", coreid);
+        ChangeSystemOperationMode(1);
+        twdint_handler_cnt = 0;
+    }
 }
 
 /*
@@ -137,11 +151,6 @@ const uint hvint0_taud0no[] = {
 };
 
 /*
- *  ハイパーバイザーの動作モード
- */
-#define HV_MODE    1
-
-/*
  *  HVユーザーメイン関数
  */
 void
@@ -150,7 +159,7 @@ rh850_main(void)
     /*
      *  ハイパーバイザーの呼び出し
      */    
-    StartHV(HV_MODE);
+    StartHV(SOMID_SOM1);
 }
 
 /*

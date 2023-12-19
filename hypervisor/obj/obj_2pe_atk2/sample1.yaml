@@ -104,17 +104,19 @@ VM:
     - 718
 TDMA:
  SystemIntervalUS: 10000000
- ScheduleTable:
-  - CoreID: 0
-    TimeWindow:
-     - {Type: VM, VMName: VM1, DurationUS: 4000000, TwtgIntNo: 707, TwtgIntInterval: 1}
-     - {Type: VM, VMName: VM2, DurationUS: 4000000, TwtgIntNo: 708, TwtgIntInterval: 2} #TwtgIntNo は省略可能，TwtgIntInterval省略時は1
-     - {Type: HV,              DurationUS: 1000000, TwtgIntNo: 709, TwtgIntInterval: 1} #HVタイムウィンドウの場合はVMIDなし
-  - CoreID: 1
-    TimeWindow:
-     - {Type: VM, VMName: VM3, DurationUS: 4000000, TwtgIntNo: 717, TwtgIntInterval: 1}
-     - {Type: VM, VMName: VM4, DurationUS: 4000000, TwtgIntNo: 718, TwtgIntInterval: 2}
-     - {Type: HV,              DurationUS: 1000000, TwtgIntNo: 719, TwtgIntInterval: 1}
+ SystemOperationMode:
+  - Name : SOM1
+    ScheduleTable:
+      - CoreID: 0
+        TimeWindow:
+         - {Type: VM, VMName: VM1, DurationUS: 4000000, TwtgIntNo: 707, TwtgIntInterval: 1}
+         - {Type: VM, VMName: VM2, DurationUS: 4000000, TwtgIntNo: 708, TwtgIntInterval: 2} #TwtgIntNo は省略可能，TwtgIntInterval省略時は1
+         - {Type: HV,              DurationUS: 1000000, TwtgIntNo: 709, TwtgIntInterval: 1} #HVタイムウィンドウの場合はVMIDなし
+      - CoreID: 1
+        TimeWindow:
+          - {Type: VM, VMName: VM3, DurationUS: 4000000, TwtgIntNo: 717, TwtgIntInterval: 1}
+          - {Type: VM, VMName: VM4, DurationUS: 4000000, TwtgIntNo: 718, TwtgIntInterval: 2}
+          - {Type: HV,              DurationUS: 1000000, TwtgIntNo: 719, TwtgIntInterval: 1}
 
 
 VCOM:

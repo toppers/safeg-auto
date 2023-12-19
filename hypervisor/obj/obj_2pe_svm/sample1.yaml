@@ -83,12 +83,14 @@ VM:
 
 TDMA:
  SystemIntervalUS: 10000000
- ScheduleTable:
-  - CoreID: 0
-    TimeWindow:
-     - {Type: VM, VMName: VM0_0, DurationUS: 4000000, TwtgIntNo: 707, TwtgIntInterval: 1}
-     - {Type: VM, VMName: VM0_1, DurationUS: 2000000, TwtgIntNo: 708, TwtgIntInterval: 2} #TwtgIntNo は省略可能，TwtgIntInterval省略時は1
-     - {Type: HV,                DurationUS: 1500000, TwtgIntNo: 709, TwtgIntInterval: 1} #HVタイムウィンドウの場合はVMIDなし
-  - CoreID: 1
-    TimeWindow:
-     - {Type: VM, VMName: VM1_0, DurationUS: 4000000, TwtgIntNo: 0}
+ SystemOperationMode:
+  - Name : SOM1
+    ScheduleTable:
+      - CoreID: 0
+        TimeWindow:
+         - {Type: VM, VMName: VM0_0, DurationUS: 4000000, TwtgIntNo: 707, TwtgIntInterval: 1}
+         - {Type: VM, VMName: VM0_1, DurationUS: 2000000, TwtgIntNo: 708, TwtgIntInterval: 2} #TwtgIntNo は省略可能，TwtgIntInterval省略時は1
+         - {Type: HV,                DurationUS: 1500000, TwtgIntNo: 709, TwtgIntInterval: 1} #HVタイムウィンドウの場合はVMIDなし
+      - CoreID: 1
+        TimeWindow:
+          - {Type: VM, VMName: VM1_0, DurationUS: 4000000, TwtgIntNo: 0}

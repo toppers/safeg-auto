@@ -344,6 +344,41 @@
       <TreeImageGuid>485a82c0-8089-451a-b33e-bf9011b1a18a</TreeImageGuid>
       <ParentItem>be728c40-b9b7-4432-a6b1-8b4e0fb92c92</ParentItem>
     </Instance>
+    <Instance Guid="2d7d8abb-1c4e-4fa4-a307-cd863a28ab6d">
+      <Name>vmcom.c</Name>
+      <Type>File</Type>
+      <RelativePath>..\..\src\vmcom.c</RelativePath>
+      <TreeImageGuid>941832c1-fc3b-4e1b-94e8-01ea17128b42</TreeImageGuid>
+      <ParentItem>be728c40-b9b7-4432-a6b1-8b4e0fb92c92</ParentItem>
+    </Instance>
+    <Instance Guid="9e286644-ff8d-4735-b550-4b2e61171757">
+      <Name>string.h</Name>
+      <Type>File</Type>
+      <RelativePath>..\..\..\..\..\..\..\sw\GHS\comp_201915\ansi\string.h</RelativePath>
+      <TreeImageGuid>03cad1e8-2eb3-4cde-a8a3-982423631122</TreeImageGuid>
+      <ParentItem>be728c40-b9b7-4432-a6b1-8b4e0fb92c92</ParentItem>
+    </Instance>
+    <Instance Guid="40b284b6-3462-45e0-b44f-3b3f4b618700">
+      <Name>ghs_null.h</Name>
+      <Type>File</Type>
+      <RelativePath>..\..\..\..\..\..\..\sw\GHS\comp_201915\ansi\ghs_null.h</RelativePath>
+      <TreeImageGuid>03cad1e8-2eb3-4cde-a8a3-982423631122</TreeImageGuid>
+      <ParentItem>be728c40-b9b7-4432-a6b1-8b4e0fb92c92</ParentItem>
+    </Instance>
+    <Instance Guid="7b73ab62-8b6c-4408-9438-f87ca56f428b">
+      <Name>ghs_mem.h</Name>
+      <Type>File</Type>
+      <RelativePath>..\..\..\..\..\..\..\sw\GHS\comp_201915\ansi\ghs_mem.h</RelativePath>
+      <TreeImageGuid>03cad1e8-2eb3-4cde-a8a3-982423631122</TreeImageGuid>
+      <ParentItem>be728c40-b9b7-4432-a6b1-8b4e0fb92c92</ParentItem>
+    </Instance>
+    <Instance Guid="eb9a5588-cf1e-43aa-999e-ee98899e733b">
+      <Name>ghs_str.h</Name>
+      <Type>File</Type>
+      <RelativePath>..\..\..\..\..\..\..\sw\GHS\comp_201915\ansi\ghs_str.h</RelativePath>
+      <TreeImageGuid>03cad1e8-2eb3-4cde-a8a3-982423631122</TreeImageGuid>
+      <ParentItem>be728c40-b9b7-4432-a6b1-8b4e0fb92c92</ParentItem>
+    </Instance>
     <Instance Guid="17853af7-fb26-401a-ac8b-418d8c7329a2">
       <Name>sample.c</Name>
       <Type>File</Type>
@@ -788,6 +823,26 @@
     <Instance Guid="374b2f13-e17f-4a48-832f-b14a563ebdcb">
       <ItemAddTime>637836433105324014</ItemAddTime>
       <ItemAddTimeCount>0</ItemAddTimeCount>
+    </Instance>
+    <Instance Guid="2d7d8abb-1c4e-4fa4-a307-cd863a28ab6d">
+      <ItemAddTime>638385436348059152</ItemAddTime>
+      <ItemAddTimeCount>0</ItemAddTimeCount>
+    </Instance>
+    <Instance Guid="9e286644-ff8d-4735-b550-4b2e61171757">
+      <ItemAddTime>638385436348059152</ItemAddTime>
+      <ItemAddTimeCount>1</ItemAddTimeCount>
+    </Instance>
+    <Instance Guid="40b284b6-3462-45e0-b44f-3b3f4b618700">
+      <ItemAddTime>638385436348069169</ItemAddTime>
+      <ItemAddTimeCount>0</ItemAddTimeCount>
+    </Instance>
+    <Instance Guid="7b73ab62-8b6c-4408-9438-f87ca56f428b">
+      <ItemAddTime>638385436348119005</ItemAddTime>
+      <ItemAddTimeCount>0</ItemAddTimeCount>
+    </Instance>
+    <Instance Guid="eb9a5588-cf1e-43aa-999e-ee98899e733b">
+      <ItemAddTime>638385436348119005</ItemAddTime>
+      <ItemAddTimeCount>1</ItemAddTimeCount>
     </Instance>
   </Class>
   <Class Guid="606767c3-4bf3-4e65-90c1-19075517355d">

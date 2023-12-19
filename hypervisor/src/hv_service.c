@@ -44,7 +44,7 @@ ResetVM(ID vmid, uint32 arg0, uint32 arg1, uint32 arg2, uint32 arg3)
     CCB  *p_my_ccb = get_my_ccb();
     
     /* vmidのエラーチェック */
-    if (!((vmid >= TMIN_VMID) && (vmid <= TNUM_VM))) {
+    if (!VALID_VMID(vmid)) {
         return E_ID;
     }
     /* コンテキストのチェック */
@@ -74,7 +74,7 @@ RaiseVMFakeFE(ID vmid, uint32 voffset, uint32 cause)
     CCB  *p_my_ccb = get_my_ccb();
     
     /* vmidのエラーチェック */
-    if (!((vmid >= TMIN_VMID) && (vmid <= TNUM_VM))) {
+    if (!VALID_VMID(vmid)) {
         return E_ID;
     }
     /* コンテキストのチェック */
@@ -103,7 +103,7 @@ RaiseVMFakeEI(ID vmid, uint32 voffset, uint32 cause)
     CCB  *p_my_ccb = get_my_ccb();
     
     /* vmidのエラーチェック */
-    if (!((vmid >= TMIN_VMID) && (vmid <= TNUM_VM))) {
+    if (!VALID_VMID(vmid)) {
         return E_ID;
     }
     /* コンテキストのチェック */
@@ -131,7 +131,7 @@ CallIdleVM(ID vmid) {
     VMCB *p_vmcb;
 
     /* vmidのエラーチェック */
-    if (!((vmid >= TMIN_VMID) && (vmid <= TNUM_VM))) {
+    if (!VALID_VMID(vmid)) {
         return E_ID;
     }
 
@@ -150,5 +150,35 @@ CallIdleVM(ID vmid) {
     /* 切り替え処理の呼び出し */
     cal_trap0_1(vmid);
 
+    return E_OK;
+}
+
+/*
+ *  システム動作モードの設定
+ */
+ER
+ChangeSystemOperationMode(ID somid) {
+    CCB  *p_my_ccb = get_my_ccb();
+    const SOMINIB	*p_sominib;
+
+    /* somidのエラーチェック */
+    if (!VALID_SOMID(somid)) {
+        return E_ID;
+    }
+    p_sominib = get_sominib(somid);
+
+    /* 1変数への書き込みのみなのでコア間の排他制御は行わない */
+    p_global_nxtsom = p_sominib;
+
+    return E_OK;
+}
+
+/*
+ *  システム動作モードの参照
+ */
+ER
+GetSystemOperationMode(ID *p_somid) {
+    /* 1変数からの読み込みなのでコア間の排他制御は行わない */
+    *p_somid = SOMID(p_global_cursom);
     return E_OK;
 }
