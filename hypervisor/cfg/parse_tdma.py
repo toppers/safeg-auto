@@ -148,12 +148,6 @@ class Parser_TDMA_t(ParserBase_t):
 			#Type
 			#err:無効なType
 			typ = node.getEnum(CFG_KW_TYPE, PEType_t)
-
-			#HVが既にあるか
-			if typ == PEType_t.HV:
-				if next((i for i in timeWins if i.type == PEType_t.HV), None):
-					#err:TimeWindowに複数のHV
-					AppError(f'{node.LastName}:({typ.name}) TimeWindow for {typ.name} is already defined')
 			timeWin.type = typ
 
 			#VMID
@@ -168,11 +162,6 @@ class Parser_TDMA_t(ParserBase_t):
 						#err:TimeWindowで指定されたVMIDが未定義
 						AppError(f'{node.LastName}:({vmid}) is not defined')
 					else:
-						#TimeWindowに既にあるか
-						if next((i for i in timeWins if i.VM == vm), None):
-							#err:TimeWindowでVMIDが重複
-							AppError(f'{node.LastName}:({vmid}) TimeWindow for {vmid} is already defined')
-
 						timeWin.VM = vm
 						pe = vm
 			elif typ == PEType_t.HV:
