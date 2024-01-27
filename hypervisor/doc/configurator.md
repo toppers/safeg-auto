@@ -429,7 +429,7 @@ HVの例を以下に示す．
        - 説明
           - タイムウィンドウの時間を指定する．
        - エラーチェック
-          - SupportCoreIDsで指定されたコアIDであるか．[ER024]	
+          - SystemIntervalUSで定義した値を超えていないか．[ER042]
     - TwtgIntNo
        - 値 : 数値
        - 説明

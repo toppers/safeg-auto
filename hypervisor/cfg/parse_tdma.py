@@ -77,11 +77,11 @@ class Parser_TDMA_t(ParserBase_t):
 
 			#SOMオブジェクト生成
 			som = Som_t(name)
-			
+
 			#ScheduleTable
 			nodeSchTbl = node.get(CFG_KW_SCHEDULE_TBL)
 			if nodeSchTbl:
-				som.Schedules = self.parseScheduleTbl(nodeSchTbl, sysInterval)
+				som.Schedules = self.parseScheduleTbl(nodeSchTbl, sysInterval, name)
 
 			#同じ名前がなければ追加
 			if name and not name in soms:
@@ -90,7 +90,7 @@ class Parser_TDMA_t(ParserBase_t):
 		return soms
 
 	#ScheduleTableノード
-	def parseScheduleTbl(self, nodes: Node_t, sysInterval: int) -> Dict[int, Schedule_t]:
+	def parseScheduleTbl(self, nodes: Node_t, sysInterval: int, som_name : str) -> Dict[int, Schedule_t]:
 		#有効キーワード
 		keys = [NodeDef_t(CFG_KW_COREID,	True),
 				NodeDef_t(CFG_KW_TIMEWIN,	True)]
@@ -122,13 +122,13 @@ class Parser_TDMA_t(ParserBase_t):
 			#TimeWindow
 			nodeTW = node.get(CFG_KW_TIMEWIN)
 			if nodeTW:
-				schedule.TimeWins = self.parseTimeWin(nodeTW, sysInterval, core)
+				schedule.TimeWins = self.parseTimeWin(nodeTW, sysInterval, core, som_name)
 
 		return schedules
 
 
 	#TimeWindowノード
-	def parseTimeWin(self, nodes: Node_t, sysInterval: int, core: Optional[Core_t]) -> List[TimeWindow_t]:
+	def parseTimeWin(self, nodes: Node_t, sysInterval: int, core: Optional[Core_t], som_name : str) -> List[TimeWindow_t]:
 		#有効キーワード
 		keys = [NodeDef_t(CFG_KW_TYPE,			True),
 				NodeDef_t(CFG_KW_VMNAME,		True),
@@ -137,6 +137,7 @@ class Parser_TDMA_t(ParserBase_t):
 				NodeDef_t(CFG_KW_TWTG_INTERVAL,	False)]
 
 		timeWins: List[TimeWindow_t] = list()
+		total_duration  = 0
 
 		for node in nodes.array():
 			#キーワードチェック
@@ -180,6 +181,7 @@ class Parser_TDMA_t(ParserBase_t):
 				#err:DurationUSがSystemIntervalUSを越えている
 				AppError(f'{node.LastName}:({duration}) must be <= {CFG_KW_SYS_INTERVAL}({sysInterval})')
 			timeWin.Duration = duration
+			total_duration = total_duration + timeWin.Duration
 
 			#TwtgIntNo 無ければ-1
 			Int = node.getInt(CFG_KW_TWTG_INT, -1)
@@ -195,6 +197,11 @@ class Parser_TDMA_t(ParserBase_t):
 			timeWin.TwtgInterval= interval
 
 			timeWins.append(timeWin)
+
+		#SystemIntervalUS以下か
+		if total_duration > sysInterval:
+			#err:DurationUSがSystemIntervalUSを越えている
+			AppError(f'{som_name}:Total duration({total_duration}) must be <= {CFG_KW_SYS_INTERVAL}({sysInterval})')
 
 		return timeWins
 
