@@ -98,6 +98,10 @@ def Generate(file: TextIO, cfg: Cfg_t):
 	for vm in cfg.VMs.values():
 		vmint += len(vm.Ints)
 	defs.PutSNL(outDefine(f'TNUM_VMINT', f'{vmint}'))
+	defs.PutNL()
+	for vm in cfg.VMs.values():
+		defs.PutSNL(outDefine(f'{vm.Name}_TNUM_VMINT', f'{len(vm.Ints)}'))
+	defs.PutNL()
 
 	#HV割込数
 	hvint = 0

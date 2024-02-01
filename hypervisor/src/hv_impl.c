@@ -37,6 +37,21 @@ const SOMINIB *p_global_nxtsom;
 uint32_t scycprc_bitmap;
 #endif /* TNUM_SUPPORT_CORE > 1 */
 
+
+#ifdef USE_DYNAMIC_INTC2GMPID
+
+/*
+ *  CORE毎のVMのspidを設定するINTC2GMPのID
+ */
+const uint8_t core_vm_intc2gmpid_table[] = {
+    CORE0_VM_INTC2GMPID,
+    CORE1_VM_INTC2GMPID,
+    CORE2_VM_INTC2GMPID,
+    CORE3_VM_INTC2GMPID
+};
+
+#endif /* USE_DYNAMIC_INTC2GMPID */
+
 /*
  *  バリア同期
  */
@@ -68,7 +83,7 @@ barrier_sync(uint32_t phase)
 }
 
 /*
- *  HVの初期化
+ *  HVの初期化 : 各コアで実行
  */
 void
 hv_init(void)
@@ -78,10 +93,8 @@ hv_init(void)
     VMCB          *p_vmcb;
     ID            my_coreid = get_my_coreid();
     CCB           *p_my_ccb = get_my_ccb();
-    uint32        intno;
-    uint32        gpid;
-    ID            coreid;
     uint32        reg_lp;
+    uint32        vmintlp;
 #ifdef SUPPORT_SBUF
     uint32        sbuflp;
 #endif /* SUPPORT_SBUF */
@@ -152,6 +165,16 @@ hv_init(void)
                 p_vmcb->sbufmpu[sbuflp].mpat = 0U;
             }
 #endif /* SUPPORT_SBUF */
+
+            /*
+             *  VM割込みの初期化
+             *  自コアのINTC1と自コアで実行するVMのINTC2のみ初期化する
+             */            
+            for (vmintlp = 0; vmintlp < p_vminib->num_vmint; vmintlp++) {                
+                bind_int_to_gm(INTNO_MASK((p_vminib->p_vmintinb)[vmintlp].intno),
+                               p_vminib->gpid,
+                               p_vminib->coreid);
+            }         
         }
     }
 
@@ -174,23 +197,6 @@ hv_init(void)
      *   MPUのチェック機構を使用するため使用する．
      */
     set_mpm(MPM_MPE_MASK);
-
-    /*
-     *  VM割込みの初期化
-     */
-    for (lp = 0; lp < TNUM_VMINT; lp++) {
-        intno = INTNO_MASK(vmintinib_table[lp].intno);
-        gpid = (get_vmcb(vmintinib_table[lp].vmid))->p_vminib->gpid;
-        coreid = vmintinib_table[lp].coreid;
-        if((intno <= INTC1_INTNO_MAX) && (coreid == my_coreid)) {
-            /* INTC1の場合 */
-            bind_int_to_gm(intno, gpid, coreid);
-        }
-        else if(is_leader()) {
-            /* INTC2の場合 */
-            bind_int_to_gm(intno, gpid, coreid);
-        }
-    }
 
     /* 
      *  コプロセッサの初期化
@@ -248,9 +254,9 @@ hvtwd_init(uint32_t hv_twd, uint32_t psw, uint32_t sp)
 void 
 hvint_init(void) 
 {
-    uint32        lp;
+    uint32      lp;
     uint        my_coreid = get_my_coreid();
-    HVINTINIB    *p_hvintinib;
+    HVINTINIB   *p_hvintinib;
 
     for(lp = 0; lp < TNUM_HVINT; lp++) {
         p_hvintinib = &hvinib_table[lp];
@@ -266,13 +272,12 @@ hvint_init(void)
 }
 
 /*
- * スレーブガードの初期化
+ *  スレーブガードの初期化 : リーダコアでのみ実行
  */
 void 
 sguard_init(void)
 {
-    uint32        lp;
-    uint8        hvgmpid = 0;
+    uint32    lp;
 
     /*
      *  LRAMのガード設定
@@ -376,53 +381,51 @@ sguard_init(void)
      *  INTC2のガード
      */
     sil_wrw_mem(INTC2GKCKPROT, UNLOCKKEY_VAL);
+
     /* HVからは全レジスタアクセス可能 */
 #if (TBIT_SUPPORT_CORE & 0x01) == 0x01
-    sil_wrw_mem(INTC2GMPIDm(4), HV_SPID_CORE0);
-    hvgmpid |= 1U << 4;
+    sil_wrw_mem(INTC2GMPIDm(CORE0_HV_INTC2GMPID), HV_SPID_CORE0);
 #endif /* (TBIT_SUPPORT_CORE & 0x01) == 0x01 */
 #if (TBIT_SUPPORT_CORE & 0x02) == 0x02
-    sil_wrw_mem(INTC2GMPIDm(5), HV_SPID_CORE1);
-    hvgmpid |= 1U << 5;
+    sil_wrw_mem(INTC2GMPIDm(CORE2_HV_INTC2GMPID), HV_SPID_CORE1);
 #endif /* (TBIT_SUPPORT_CORE & 0x02) == 0x02 */    
 #if (TBIT_SUPPORT_CORE & 0x04) == 0x04
-    sil_wrw_mem(INTC2GMPIDm(6), HV_SPID_CORE2);
-    hvgmpid |= 1U << 6;
+    sil_wrw_mem(INTC2GMPIDm(CORE3_HV_INTC2GMPID), HV_SPID_CORE2);
 #endif /* (TBIT_SUPPORT_CORE & 0x04) == 0x04 */
 #if (TBIT_SUPPORT_CORE & 0x08) == 0x08
-    sil_wrw_mem(INTC2GMPIDm(7), HV_SPID_CORE3);
-    hvgmpid |= 1U << 7;
+    sil_wrw_mem(INTC2GMPIDm(CORE4_HV_INTC2GMPID), HV_SPID_CORE3);
 #endif /* (TBIT_SUPPORT_CORE & 0x08) == 0x08 */
-
-    sil_wrw_mem(INTC2GPORT_GR, CPCR_GEN|CPCR_DBG|CPCR_RG|(hvgmpid << INTC2GPORT_MPID));
-    sil_wrw_mem(INTC2GPORT_IMR, CPCR_GEN|CPCR_DBG|CPCR_RG|(hvgmpid << INTC2GPORT_MPID));
-    for(lp = INTC2_INTNO_MIN; lp <= INTC2_INTNO_MAX; lp++) {
-        sil_wrw_mem(INTC2GPORT_n(lp), CPCR_GEN|CPCR_DBG|CPCR_RG|(hvgmpid << INTC2GPORT_MPID));
+    
+    sil_wrw_mem(INTC2GPORT_GR, CPCR_GEN|CPCR_DBG|CPCR_RG|(HV_INTC2GMPID_BITMASK << INTC2GPORT_MPID));
+    sil_wrw_mem(INTC2GPORT_IMR, CPCR_GEN|CPCR_DBG|CPCR_RG|(HV_INTC2GMPID_BITMASK << INTC2GPORT_MPID));
+    for (lp = INTC2_INTNO_MIN; lp <= INTC2_INTNO_MAX; lp++) {
+        sil_wrw_mem(INTC2GPORT_n(lp), CPCR_GEN|CPCR_DBG|CPCR_RG|(HV_INTC2GMPID_BITMASK << INTC2GPORT_MPID));
     }
 
-#ifdef USE_DYNAMIC_INTC2GMPID
-    /* ToDo この方法はNGなので見直す */
-    for(lp=0; lp < TNUM_VMINT; lp++) {
-        uint32_t coreid = vmintinib_table[lp].coreid;
-        sil_wrw_mem(INTC2GPORT_n(vmintinib_table[lp].intno), CPCR_GEN|CPCR_DBG|CPCR_RG|);
-        (((hvgmpid)| (1U << coreid)) << INTC2GPORT_MPID);
-    }
-    /* 
-     *  ロックは解除しない
-     *    ロックするとロックレジスタへのアクセスへのコア間での排他制御（スピンロック）
-     *    が必要となるため．
-     */
-#else /* !USE_DYNAMIC_INTC2GMPID */
-    for(lp = 0; lp < TNUM_VM; lp++) {
+#ifndef USE_DYNAMIC_INTC2GMPID
+    /* VMの数が4個以下の場合 */
+    /* 各VMに割り当てるINTC2GmPIDの初期化 */
+    for (lp = 0; lp < TNUM_VM; lp++) {
         sil_wrw_mem(INTC2GMPIDm(lp), (p_vmcb_table[lp])->p_vminib->initspid);
     }
-    for(lp=0; lp < TNUM_VMINT; lp++) {
-        uint32_t gmpid = vmintinib_table[lp].vmid - 1;
-        sil_wrw_mem(INTC2GPORT_n(vmintinib_table[lp].intno), (CPCR_GEN|CPCR_DBG|CPCR_RG|
-                                                              (((hvgmpid)|(1U << gmpid)) << INTC2GPORT_MPID)));
+    /* 各INTC2に参照するINTC2GmPIDのIDを設定 */
+    for (lp = 0; lp < TNUM_VM; lp++) {
+        const VMINIB  *p_vminib = &(vminib_table[lp]);
+        uint32  vmintlp;
+        for (vmintlp = 0; vmintlp < p_vminib->num_vmint; vmintlp++) {
+            uint32_t gmpid = lp;
+            uint32_t intno = INTNO_MASK((p_vminib->p_vmintinb)[vmintlp].intno);
+            /* INTC2割込みなら設定 */
+            if (intno > INTC1_INTNO_MAX) {
+                sil_wrw_mem(INTC2GPORT_n(intno),
+                            (CPCR_GEN|CPCR_DBG|CPCR_RG|
+                             (((HV_INTC2GMPID_BITMASK)|(1U << gmpid)) << INTC2GPORT_MPID)));
+            }
+        }
     }
-    sil_wrw_mem(INTC2GKCKPROT, LOCKKEY_VAL);
 #endif /* USE_DYNAMIC_INTC2GMPID */
+
+    sil_wrw_mem(INTC2GKCKPROT, LOCKKEY_VAL);    
 
     /*
      *  周辺回路のガード
@@ -488,6 +491,11 @@ update_p_runvm(CCB *p_my_ccb)
 static void
 vmtwd_start(uint32_t my_coreid, CCB *p_my_ccb, boolean istwtimer)
 {
+#ifdef USE_DYNAMIC_INTC2GMPID    
+    uint32_t vmintlp;
+    const VMINIB  *p_vminib = p_my_ccb->p_runvm->p_vminib;
+#endif /* USE_DYNAMIC_INTC2GMPID */
+    
     /* 
      *  VMTWD実行中のホストモードのPSWの値
      *   Clear EBV(Enable RBASE) 
@@ -513,12 +521,25 @@ vmtwd_start(uint32_t my_coreid, CCB *p_my_ccb, boolean istwtimer)
         twdtimer_start(my_coreid, p_my_ccb->p_runtwd->duration);
     }
 
-    /*
-     *  INTC2のアクセスの設定
-     */
+
 #ifdef USE_DYNAMIC_INTC2GMPID
-    /* ToDo この方法はNGなので見直す */
-    *INTC2GMPIDm(my_coreid) = p_my_ccb->p_runvm->p_vminib->initspid;
+    /*
+     *  INTC2のアクセス許可
+     */
+    acquire_giant_lock();
+    sil_wrw_mem(INTC2GKCKPROT, UNLOCKKEY_VAL);
+    /* コア毎のINTC2GMPIDmに実行するVMのspidを設定 */
+    sil_wrw_mem(INTC2GMPIDm(core_vm_intc2gmpid_table[my_coreid]), p_my_ccb->p_runvm->p_vminib->initspid);   
+    /* VMに割り当てられたINTC2へアクセス可能とする */
+    for (vmintlp = 0; vmintlp < p_vminib->num_vmint; vmintlp++) {
+
+        sil_wrw_mem(INTC2GPORT_n(INTNO_MASK((p_vminib->p_vmintinb)[vmintlp].intno)),
+                                 (CPCR_GEN|CPCR_DBG|CPCR_RG
+                                  |(((HV_INTC2GMPID_BITMASK)
+                                     |(1U << core_vm_intc2gmpid_table[my_coreid])) << INTC2GPORT_MPID)));
+    }    
+    sil_wrw_mem(INTC2GKCKPROT, LOCKKEY_VAL);
+    release_giant_lock();
 #endif /* USE_DYNAMIC_INTC2GMPID */
 
     /*
@@ -572,8 +593,8 @@ update_cursom(CCB *p_my_ccb)
     /*
      * コア間ロックの取得
      */
-    acquire_lock(&giant_lock);
-
+    acquire_giant_lock();
+    
     /*
      *  システム動作モードの変更
      */
@@ -595,7 +616,7 @@ update_cursom(CCB *p_my_ccb)
     /*
      * コア間ロックの解放
      */
-    release_lock(&giant_lock);
+    release_giant_lock();
 }
 #else /* !TNUM_SUPPORT_CORE > 1 */
 static void 
@@ -680,9 +701,9 @@ scyc_switch(void)
 void
 twd_switch(void)
 {
-    CCB        *p_my_ccb = get_my_ccb();
+    CCB       *p_my_ccb = get_my_ccb();
     uint32    my_coreid = get_my_coreid();
-
+    
     DEBUGOUT("twd_switch() : timer window handler start.\n\r");
 
 #ifdef ENABLE_TWD_SWITCH_HOOK
@@ -697,6 +718,27 @@ twd_switch(void)
      */
     twdtimer_stop(my_coreid);
 
+
+#ifdef USE_DYNAMIC_INTC2GMPID
+    /*
+     *  INTC2のアクセス許可の解除
+     */
+    if (p_my_ccb->p_runvm != NULL) {
+        uint32_t vmintlp;
+        const VMINIB  *p_vminib = p_my_ccb->p_runvm->p_vminib;
+        acquire_giant_lock();
+        sil_wrw_mem(INTC2GKCKPROT, UNLOCKKEY_VAL);
+        /* VMTWの場合は許可していたINTC2へのアクセスを禁止する */
+        for (vmintlp = 0; vmintlp < p_vminib->num_vmint; vmintlp++) {
+            sil_wrw_mem(INTC2GPORT_n(INTNO_MASK((p_vminib->p_vmintinb)[vmintlp].intno)),
+                        CPCR_GEN|CPCR_DBG|CPCR_RG|
+                        (HV_INTC2GMPID_BITMASK << INTC2GPORT_MPID));
+        }
+        sil_wrw_mem(INTC2GKCKPROT, LOCKKEY_VAL);
+        release_giant_lock();
+    }
+#endif /* USE_DYNAMIC_INTC2GMPID */
+    
     /*
      *  p_runtwdの更新
      */

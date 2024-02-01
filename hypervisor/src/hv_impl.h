@@ -67,7 +67,28 @@ extern const uint8 hvspid_table[];
  */
 #if (TNUM_INTC2GMPID - 4) < TNUM_VM
 #define USE_DYNAMIC_INTC2GMPID
+
+/*  
+ *  VMが使用するINTC2GMPのID
+ */
+#define CORE0_VM_INTC2GMPID  0U
+#define CORE1_VM_INTC2GMPID  1U
+#define CORE2_VM_INTC2GMPID  2U
+#define CORE3_VM_INTC2GMPID  3U
 #endif /* (TNUM_INTC2GMPID - 4) < TNUM_VM */
+
+/*  
+ *  HVが使用するINTC2GMPのID
+ */
+#define CORE0_HV_INTC2GMPID  4U
+#define CORE1_HV_INTC2GMPID  5U
+#define CORE2_HV_INTC2GMPID  6U
+#define CORE3_HV_INTC2GMPID  7U
+
+/*
+ *  HVが使用するINTC2GMPのIDのビットマスク
+ */
+#define HV_INTC2GMPID_BITMASK ((1U << CORE0_HV_INTC2GMPID)|(1U << CORE1_HV_INTC2GMPID)|(1U << CORE2_HV_INTC2GMPID)|(1U << CORE3_HV_INTC2GMPID))
 
 /*
  *  前方参照
@@ -77,6 +98,7 @@ typedef struct vm_control_block VMCB;
 typedef struct twd_initialization_block TWDINIB;
 typedef struct core_control_block CCB;
 typedef struct system_operation_mode_initialization_block SOMINIB;
+typedef struct vmint_initialization_block VMINTINIB;
 
 /*
  *  コア管理ブロック（CCB）の定義
@@ -120,10 +142,10 @@ struct core_control_block {
      */
     boolean runidle;
 
-	/*
-	 *  現在のシステム動作モード
-	 */
-	const SOMINIB *p_cursom;
+    /*
+     *  現在のシステム動作モード
+     */
+    const SOMINIB *p_cursom;
 };
 
 #endif /* TOPPERS_MACRO_ONLY */
@@ -164,11 +186,13 @@ extern HVTWDCB *const p_hvtwdcb_table[TNUM_PHYS_CORE];
  *  VM初期化ブロック
  */
 typedef struct {
-    uint8   coreid;     /* コアID */
-    uint32  rbase;      /* リセットベクタ */
-    uint8   gpid;       /* GPID */
-    uint32  spidlist;   /* 設定可能なspidのリスト */
-    uint8   initspid;   /* spidの初期値 */
+    uint8   coreid;         /* コアID */
+    uint32  rbase;          /* リセットベクタ */
+    uint8   gpid;           /* GPID */
+    uint32  spidlist;       /* 設定可能なspidのリスト */
+    uint8   initspid;       /* spidの初期値 */
+    uint32  num_vmint;      /* 割り当てられたVMINTの個数 */
+    VMINTINIB const *p_vmintinb;  /* VMINT初期化ブロックへのポインタ */
 } VMINIB;
 
 /*
@@ -303,21 +327,14 @@ extern VMCB *const p_vmcb_table[];
 /*
  *  VMIDのチェック
  */
-#define VALID_VMID(vmid)	(TMIN_VMID <= (vmid) && (vmid) <= TNUM_VM)
+#define VALID_VMID(vmid)    (TMIN_VMID <= (vmid) && (vmid) <= TNUM_VM)
 
 /*
  * VM割込み初期化ブロック
  */
-typedef struct {
+struct vmint_initialization_block {
     uint32 intno;
-    uint32 vmid;
-    ID     coreid;
-} VMINTINIB;
-
-/*
- * VM割込み初期化ブロックテーブル（hv_cfg.c）
- */
-extern const VMINTINIB vmintinib_table[];
+};
 
 /*
  *  タイムウィンドウ初期化ブロック
@@ -484,6 +501,25 @@ extern uint32 bootsync;
  *  ジャイアントロック変数
  */
 extern uint32 giant_lock;
+
+INLINE void
+acquire_giant_lock() {
+    acquire_lock(&giant_lock);
+}
+
+INLINE void
+release_giant_lock() {
+    release_lock(&giant_lock);
+}
+#else  /* !TNUM_SUPPORT_CORE > 1 */
+INLINE void
+acquire_giant_lock() {
+}
+
+INLINE void
+release_giant_lock() {
+
+}
 #endif /* TNUM_SUPPORT_CORE > 1 */
 
 /*

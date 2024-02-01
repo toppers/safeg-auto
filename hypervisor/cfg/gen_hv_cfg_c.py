@@ -92,6 +92,20 @@ def Generate(file: TextIO, cfg: Cfg_t):
 	defs.PutSNL('};')
 	defs.PutNL()
 
+	#VM割込初期化ブロックテーブル
+	for vm in cfg.VMs.values():
+		defs.PutSNL(f'const VMINTINIB vmintinib_table_{vm.Name}[{vm.Name}_TNUM_VMINT] = {{')
+		defs.TabUp()
+		for no in vm.Ints:
+			defs.PutTabSNL('{')
+			defs.TabUp()
+			defs.PutTabSNL(f'{no:>3},')
+			defs.TabDown()
+			defs.PutTabSNL('},')
+		defs.TabDown()
+		defs.PutSNL('};')
+	defs.PutNL()
+
 	#VM初期化ブロックテーブル
 	defs.PutSNL('const VMINIB vminib_table[TNUM_VM] = {')
 	defs.TabUp()
@@ -102,7 +116,9 @@ def Generate(file: TextIO, cfg: Cfg_t):
 		defs.PutTabSNL(f'0x{vm.ResetBase:>08X},')
 		defs.PutTabSNL(f'{vm.defGPID()},')
 		defs.PutTabSNL(f'{vm.Name}_SPIDLIST,')
-		defs.PutTabSNL(f'{vm.Name}_SPID')
+		defs.PutTabSNL(f'{vm.Name}_SPID,')
+		defs.PutTabSNL(f'{vm.Name}_TNUM_VMINT,')
+		defs.PutTabSNL(f'vmintinib_table_{vm.Name}')
 		defs.TabDown()
 		defs.PutTabSNL('},')
 	defs.TabDown()
@@ -121,14 +137,6 @@ def Generate(file: TextIO, cfg: Cfg_t):
 	defs.PutSNL('VMCB *const p_vmcb_table[TNUM_VM] = {')
 	for vm in cfg.VMs.values():
 		defs.PutTabSNL(f'&vmcb_{vm.Name},', 1)
-	defs.PutSNL('};')
-	defs.PutNL()
-
-	#VM割込初期化ブロックテーブル
-	defs.PutSNL('const VMINTINIB vmintinib_table[TNUM_VMINT] = {')
-	for vm in cfg.VMs.values():
-		for no in vm.Ints:
-			defs.PutTabSNL(f'{{{no:>3}, {vm.defVMID()}, {vm.Core.defIDName()}}},', 1)
 	defs.PutSNL('};')
 	defs.PutNL()
 
