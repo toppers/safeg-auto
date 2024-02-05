@@ -50,9 +50,9 @@ def Generate(dir: str, cfg: Cfg_t):
 		if cfg.VCOM.SBufs.NumInsts():
 			defs.PutNL()
 			if ccrh:
-				defs.PutSNL('stm_mp_sbuf .macro pbase\n\tstm.mp\te4-e7, [pbase]\n.endm')
+				defs.PutSNL(f'stm_mp_sbuf .macro pbase\n\tstm.mp\te4-e{4+cfg.VCOM.SBufs.NumInsts()-1}, [pbase]\n.endm')
 			else:
-				defs.PutSNL('.macro stm_mp_sbuf pbase\n\tstm.mp\te4-e7, [pbase]\n.endm')
+				defs.PutSNL(f'.macro stm_mp_sbuf pbase\n\tstm.mp\te4-e{4+cfg.VCOM.SBufs.NumInsts()-1}, [pbase]\n.endm')
 			defs.PutNL()
 
 	if ccrh:
