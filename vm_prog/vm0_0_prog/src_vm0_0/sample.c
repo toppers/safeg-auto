@@ -5,7 +5,7 @@
 
 #define VMNAME     "VM0_0"
 #define OSTMNO     0U
-#define TWTGINTNO  707
+#define TWTGINTNO  544  /* アセンブラファイルは手動で変更すること */
 
 #define GEN_MDP_ERROR
 

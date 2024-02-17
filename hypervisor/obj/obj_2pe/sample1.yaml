@@ -23,7 +23,7 @@ HV:
      StackHVTW : .cbss0
     Interrupt : #HV割込み
      - {IntNo : 380, IntHandler : hvint0_handler, Priority : 9, Enable : true}  #Enable省略時はFalse
-     - {IntNo : 709, IntHandler : twdint_handler, Priority : 9, Enable : true}
+     - {IntNo : 546, IntHandler : twdint_handler, Priority : 9, Enable : true}
 
   - ID:             1
     SPID:           1
@@ -38,7 +38,7 @@ HV:
      StackHVTW : .cbss1
     Interrupt :
      - {IntNo : 381, IntHandler : hvint0_handler, Priority : 9, Enable : true}
-     - {IntNo : 719, IntHandler : twdint_handler, Priority : 9, Enable : true}
+     - {IntNo : 549, IntHandler : twdint_handler, Priority : 9, Enable : true}
 
 VM:
  - Name:      VM0_0
@@ -53,7 +53,7 @@ VM:
    SPIDList:  [4]
    Interrupt: #VM割込み 数値のみ指定可能
     - 199 #OSTM0_INTNO
-    - 707
+    - 544
  - Name:      VM0_1
    CoreID:    0
    RestBase:  0x00200000
@@ -66,7 +66,7 @@ VM:
    SPIDList:  [5]
    Interrupt:
     - 200 #OSTM1_INTNO
-    - 708
+    - 545
  - Name:      VM1_0
    CoreID:    1
    RestBase:  0x00500000
@@ -79,7 +79,7 @@ VM:
    SPIDList:  [6]
    Interrupt:
     - 201 #OSTM2_INTNO
-    - 717
+    - 547
  - Name:      VM1_1
    CoreID:    1
    RestBase:  0x00600000
@@ -92,7 +92,7 @@ VM:
    SPIDList:  [7]
    Interrupt:
     - 202 #OSTM3_INTNO
-    - 718
+    - 548
 
 TDMA:
  SystemIntervalUS: 10000000
@@ -101,23 +101,23 @@ TDMA:
     ScheduleTable:
     - CoreID: 0
       TimeWindow:
-      - {Type: VM, VMName: VM0_0, DurationUS: 4000000, TwtgIntNo: 707, TwtgIntInterval: 1}
-      - {Type: VM, VMName: VM0_1, DurationUS: 2000000, TwtgIntNo: 708, TwtgIntInterval: 2}
-      - {Type: HV,                DurationUS: 1500000, TwtgIntNo: 709, TwtgIntInterval: 1}
+      - {Type: VM, VMName: VM0_0, DurationUS: 4000000, TwtgIntNo: 544, TwtgIntInterval: 1}
+      - {Type: VM, VMName: VM0_1, DurationUS: 2000000, TwtgIntNo: 545, TwtgIntInterval: 2}
+      - {Type: HV,                DurationUS: 1500000, TwtgIntNo: 546, TwtgIntInterval: 1}
     - CoreID: 1
       TimeWindow:
-      - {Type: VM, VMName: VM1_0, DurationUS: 4000001, TwtgIntNo: 717, TwtgIntInterval: 1}
-      - {Type: VM, VMName: VM1_1, DurationUS: 2000001, TwtgIntNo: 718, TwtgIntInterval: 2}
-      - {Type: HV,                DurationUS: 1500001, TwtgIntNo: 719, TwtgIntInterval: 1}
+      - {Type: VM, VMName: VM1_0, DurationUS: 4000001, TwtgIntNo: 547, TwtgIntInterval: 1}
+      - {Type: VM, VMName: VM1_1, DurationUS: 2000001, TwtgIntNo: 548, TwtgIntInterval: 2}
+      - {Type: HV,                DurationUS: 1500001, TwtgIntNo: 549, TwtgIntInterval: 1}
   - Name : SOM2
     ScheduleTable:
     - CoreID: 0
       TimeWindow:
-      - {Type: VM, VMName: VM0_1, DurationUS: 2000000, TwtgIntNo: 708, TwtgIntInterval: 2}
-      - {Type: VM, VMName: VM0_0, DurationUS: 4000000, TwtgIntNo: 707, TwtgIntInterval: 1}
-      - {Type: HV,                DurationUS: 1500000, TwtgIntNo: 709, TwtgIntInterval: 1}
+      - {Type: VM, VMName: VM0_1, DurationUS: 2000000, TwtgIntNo: 545, TwtgIntInterval: 2}
+      - {Type: VM, VMName: VM0_0, DurationUS: 4000000, TwtgIntNo: 544, TwtgIntInterval: 1}
+      - {Type: HV,                DurationUS: 1500000, TwtgIntNo: 546, TwtgIntInterval: 1}
     - CoreID: 1
       TimeWindow:
-      - {Type: VM, VMName: VM1_1, DurationUS: 2000001, TwtgIntNo: 718, TwtgIntInterval: 2}
-      - {Type: VM, VMName: VM1_0, DurationUS: 4000001, TwtgIntNo: 717, TwtgIntInterval: 1}
-      - {Type: HV,                DurationUS: 1500001, TwtgIntNo: 719, TwtgIntInterval: 1}
+      - {Type: VM, VMName: VM1_1, DurationUS: 2000001, TwtgIntNo: 548, TwtgIntInterval: 2}
+      - {Type: VM, VMName: VM1_0, DurationUS: 4000001, TwtgIntNo: 547, TwtgIntInterval: 1}
+      - {Type: HV,                DurationUS: 1500001, TwtgIntNo: 549, TwtgIntInterval: 1}

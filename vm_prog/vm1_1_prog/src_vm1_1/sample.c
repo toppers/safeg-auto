@@ -5,7 +5,7 @@
 
 #define VMNAME      "VM1_1"
 #define OSTMNO      3
-#define TWTGINTNO   718
+#define TWTGINTNO   548
 
 void
 ostm0_handler(void)

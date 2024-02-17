@@ -7,7 +7,7 @@
 
 #define VMNAME       "VM0_1"
 #define OSTMNO       1U
-#define TWTGINTNO    708
+#define TWTGINTNO			545  /* アセンブラファイルは手動で変更すること */
 
 void
 ostm0_handler(void)

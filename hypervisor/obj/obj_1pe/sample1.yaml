@@ -22,7 +22,7 @@ HV:
      StackHVTW : .cbss0
     Interrupt : #HV割込み
      - {IntNo : 380, IntHandler : hvint0_handler, Priority : 9, Enable : true}
-     - {IntNo : 709, IntHandler : twdint_handler, Priority : 9, Enable : true}
+     - {IntNo : 546, IntHandler : twdint_handler, Priority : 9, Enable : true}
    
 VM:
  - Name:      VM0_0
@@ -37,7 +37,7 @@ VM:
    SPIDList:  [4]
    Interrupt: #VM割込み 数値のみ指定可能
     - 199 #OSTM0_INTNO
-    - 707
+    - 544
  - Name:      VM0_1
    CoreID:    0
    RestBase:  0x00200000
@@ -50,7 +50,7 @@ VM:
    SPIDList:  [5] 
    Interrupt: #VM割込み 数値のみ指定可能
     - 200 #OSTM1_INTNO
-    - 708
+    - 545
  - Name:      VM0_IDLE
    CoreID:    0
    RestBase:  0x00300000
@@ -63,7 +63,6 @@ VM:
    SPIDList:  [6] 
    Interrupt: #VM割込み 数値のみ指定可能
     - 201 #OSTM2_INTNO
-    - 717
 
 TDMA:
  SystemIntervalUS: 10000000
@@ -72,14 +71,14 @@ TDMA:
     ScheduleTable:
     - CoreID: 0
       TimeWindow:
-       - {Type: VM, VMName: VM0_0, DurationUS: 4000000, TwtgIntNo: 707, TwtgIntInterval: 1}
-       - {Type: VM, VMName: VM0_1, DurationUS: 2000000, TwtgIntNo: 708, TwtgIntInterval: 2} #TwtgIntNo は省略可能，TwtgIntInterval省略時は1
-       - {Type: HV,                DurationUS: 1500000, TwtgIntNo: 709, TwtgIntInterval: 1} #HVタイムウィンドウの場合はVMIDなし
+       - {Type: VM, VMName: VM0_0, DurationUS: 4000000, TwtgIntNo: 544, TwtgIntInterval: 1}
+       - {Type: VM, VMName: VM0_1, DurationUS: 2000000, TwtgIntNo: 545, TwtgIntInterval: 2} #TwtgIntNo は省略可能，TwtgIntInterval省略時は1
+       - {Type: HV,                DurationUS: 1500000, TwtgIntNo: 546, TwtgIntInterval: 1} #HVタイムウィンドウの場合はVMIDなし
   - Name : SOM2
     ScheduleTable:
     - CoreID: 0
       TimeWindow:
-       - {Type: VM, VMName: VM0_1, DurationUS: 2000000, TwtgIntNo: 708, TwtgIntInterval: 2}
-       - {Type: VM, VMName: VM0_0, DurationUS: 4000000, TwtgIntNo: 707, TwtgIntInterval: 1}
-       - {Type: HV,                DurationUS: 1500000, TwtgIntNo: 709, TwtgIntInterval: 1}
+       - {Type: VM, VMName: VM0_1, DurationUS: 2000000, TwtgIntNo: 545, TwtgIntInterval: 2}
+       - {Type: VM, VMName: VM0_0, DurationUS: 4000000, TwtgIntNo: 544, TwtgIntInterval: 1}
+       - {Type: HV,                DurationUS: 1500000, TwtgIntNo: 546, TwtgIntInterval: 1}
 
