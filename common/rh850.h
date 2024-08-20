@@ -715,6 +715,35 @@ stop_pmcount(uint8_t no)
     }
 }
 
+LOCAL_INLINE boolean
+acquire_lock_ldlstc(uint32 *p_lock)
+{
+    uint32 locked = 0;
+    Asm("1: ldl.w [%1], r21 \n"
+        "   cmp   r0, r21   \n"
+        "   bnz   2f        \n"
+        "   mov   1, r21    \n"
+        "   stc.w r21, [%1] \n"
+        "   cmp   r0, r21   \n"
+        "   be    2f        \n"
+        "   mov   1, %0     \n"
+        "   br    3f        \n"
+        "2:                 \n"
+        "   mov   0, %0     \n"
+        "3:                 \n"
+        : "=r" (locked)
+        : "r" (p_lock)
+        : "cc", "r21");
+    
+    return(locked == 1);
+}
+
+LOCAL_INLINE void
+release_lock_ldlstc(uint32 *p_lock)
+{
+    *p_lock = 0;
+}
+
 #endif /* TOPPERS_MACRO_ONLY */
 
 #endif /* _RH850_H_ */

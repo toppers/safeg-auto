@@ -33,6 +33,7 @@ CFG_KW_TYPE					= "Type"
 CFG_KW_SPID_LIST			= "SPIDList"
 
 CFG_KW_SYS_INTERVAL			= "SystemIntervalUS"
+CFG_KW_SOM      			= "SystemOperationMode"
 CFG_KW_SCHEDULE_TBL			= "ScheduleTable"
 CFG_KW_TIMEWIN				= "TimeWindow"
 CFG_KW_VMNAME				= "VMName"

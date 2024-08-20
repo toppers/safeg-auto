@@ -51,9 +51,8 @@ _UCPOP: /* 080H 080 */
     nop
     .endr
 _MIP: /* 090H 090 */
-    .rept 8
-    nop
-    .endr
+    jr32 _MIP
+
 _PIE: /* 0A0H 0A0 */
     .rept 8
     nop
@@ -232,23 +231,14 @@ call_ostm3:
 call_ostm4:
     movea OSTM4_INTNO,r0,r11
     cmp   r11,r6
-    bne   twtgint_707
+    bne   twtgint
     ei
     jarl  _ostm4_handler,lp
     di
 
-    /* タイムウィンドウトリガ割込み(707)の場合 */
-twtgint_707:
-    movea 707,r0,r11
-    cmp   r11,r6
-    bne   twtgint_708
-    ei
-    jarl  _twtgint_handler,lp
-    di
-
-    /* タイムウィンドウトリガ割込み(708)の場合 */
-twtgint_708:
-    movea 708,r0,r11
+    /* タイムウィンドウトリガ割込みの場合 */
+twtgint:
+    movea 544,r0,r11
     cmp   r11,r6
     bne   int_handler_exit
     ei

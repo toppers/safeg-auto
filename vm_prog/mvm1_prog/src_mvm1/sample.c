@@ -6,8 +6,8 @@
 #define VMNAME             "VM1"
 #define OSTMNO_CORE0         2
 #define OSTMNO_CORE1         3
-#define TWTGINTNO_CORE0    717
-#define TWTGINTNO_CORE1    718
+#define TWTGINTNO_CORE0    547
+#define TWTGINTNO_CORE1    548
 
 const uint rlin3_portno[] = {
     RLIN3_PORT_NO_CORE0,

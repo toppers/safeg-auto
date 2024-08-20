@@ -15,6 +15,7 @@ from cfg import *
 from cfg_tdma import *
 from cfg_schedule import *
 from cfg_timewin import *
+from cfg_som import *
 
 from error import *
 
@@ -29,7 +30,8 @@ class Parser_TDMA_t(ParserBase_t):
 	def Parse(self, node: Node_t) -> None:
 		#有効キーワード
 		keys = [NodeDef_t(CFG_KW_SYS_INTERVAL,	True),
-				NodeDef_t(CFG_KW_SCHEDULE_TBL,	True)]
+				NodeDef_t(CFG_KW_SOM,			True)]
+
 		#キーワードチェック
 		node.chkKeyword(keys)
 
@@ -39,17 +41,56 @@ class Parser_TDMA_t(ParserBase_t):
 		#SystemIntervalUS
 		interval = node.getInt(CFG_KW_SYS_INTERVAL)
 		tdma.Interval = interval
+		
+		#SystemOperationMode
+		nodeSystemOperationMode = node.get(CFG_KW_SOM)
+		if nodeSystemOperationMode:
+			tdma.SystemOperationModes = self.parseSystemOperationMode(nodeSystemOperationMode, interval)
 
-		#ScheduleTable
-		nodeSchTbl = node.get(CFG_KW_SCHEDULE_TBL)
-		if nodeSchTbl:
-			tdma.Schedules = self.parseScheduleTbl(nodeSchTbl, interval)
+		#コア毎のタイムウィンドウ数を取得
+		for som in tdma.SystemOperationModes.values():
+			for sched in som.Schedules.values():
+				if (sched.Core.ID in tdma.NumTW):
+					tdma.NumTW[sched.Core.ID] += len(sched.TimeWins)
+				else:
+					tdma.NumTW[sched.Core.ID] = len(sched.TimeWins)
 
 		return
 
+	#SystemOperationModeノード
+	def parseSystemOperationMode(self, nodes: Node_t, sysInterval: int) -> Dict[str, Som_t]:
+		keys = [NodeDef_t(CFG_KW_NAME,			True),
+				NodeDef_t(CFG_KW_SCHEDULE_TBL,	True)]
+
+		soms: Dict[str, Som_t] = OrderedDict()
+		
+		for node in nodes.array():
+			#有効キーワードチェック
+			node.chkKeyword(keys)
+
+			#ID
+			#err:SOMIDが識別子として無効
+			name = node.getIdentifier(CFG_KW_NAME)
+			if name:
+				#err:同名のオブジェクトが存在するか
+				self.Cfg.existName(name, node.LastName)
+
+			#SOMオブジェクト生成
+			som = Som_t(name)
+
+			#ScheduleTable
+			nodeSchTbl = node.get(CFG_KW_SCHEDULE_TBL)
+			if nodeSchTbl:
+				som.Schedules = self.parseScheduleTbl(nodeSchTbl, sysInterval, name)
+
+			#同じ名前がなければ追加
+			if name and not name in soms:
+				soms[name] = som
+
+		return soms
 
 	#ScheduleTableノード
-	def parseScheduleTbl(self, nodes: Node_t, sysInterval: int) -> Dict[int, Schedule_t]:
+	def parseScheduleTbl(self, nodes: Node_t, sysInterval: int, som_name : str) -> Dict[int, Schedule_t]:
 		#有効キーワード
 		keys = [NodeDef_t(CFG_KW_COREID,	True),
 				NodeDef_t(CFG_KW_TIMEWIN,	True)]
@@ -81,13 +122,13 @@ class Parser_TDMA_t(ParserBase_t):
 			#TimeWindow
 			nodeTW = node.get(CFG_KW_TIMEWIN)
 			if nodeTW:
-				schedule.TimeWins = self.parseTimeWin(nodeTW, sysInterval, core)
+				schedule.TimeWins = self.parseTimeWin(nodeTW, sysInterval, core, som_name)
 
 		return schedules
 
 
 	#TimeWindowノード
-	def parseTimeWin(self, nodes: Node_t, sysInterval: int, core: Optional[Core_t]) -> List[TimeWindow_t]:
+	def parseTimeWin(self, nodes: Node_t, sysInterval: int, core: Optional[Core_t], som_name : str) -> List[TimeWindow_t]:
 		#有効キーワード
 		keys = [NodeDef_t(CFG_KW_TYPE,			True),
 				NodeDef_t(CFG_KW_VMNAME,		True),
@@ -96,6 +137,7 @@ class Parser_TDMA_t(ParserBase_t):
 				NodeDef_t(CFG_KW_TWTG_INTERVAL,	False)]
 
 		timeWins: List[TimeWindow_t] = list()
+		total_duration  = 0
 
 		for node in nodes.array():
 			#キーワードチェック
@@ -107,12 +149,6 @@ class Parser_TDMA_t(ParserBase_t):
 			#Type
 			#err:無効なType
 			typ = node.getEnum(CFG_KW_TYPE, PEType_t)
-
-			#HVが既にあるか
-			if typ == PEType_t.HV:
-				if next((i for i in timeWins if i.type == PEType_t.HV), None):
-					#err:TimeWindowに複数のHV
-					AppError(f'{node.LastName}:({typ.name}) TimeWindow for {typ.name} is already defined')
 			timeWin.type = typ
 
 			#VMID
@@ -127,11 +163,6 @@ class Parser_TDMA_t(ParserBase_t):
 						#err:TimeWindowで指定されたVMIDが未定義
 						AppError(f'{node.LastName}:({vmid}) is not defined')
 					else:
-						#TimeWindowに既にあるか
-						if next((i for i in timeWins if i.VM == vm), None):
-							#err:TimeWindowでVMIDが重複
-							AppError(f'{node.LastName}:({vmid}) TimeWindow for {vmid} is already defined')
-
 						timeWin.VM = vm
 						pe = vm
 			elif typ == PEType_t.HV:
@@ -150,6 +181,7 @@ class Parser_TDMA_t(ParserBase_t):
 				#err:DurationUSがSystemIntervalUSを越えている
 				AppError(f'{node.LastName}:({duration}) must be <= {CFG_KW_SYS_INTERVAL}({sysInterval})')
 			timeWin.Duration = duration
+			total_duration = total_duration + timeWin.Duration
 
 			#TwtgIntNo 無ければ-1
 			Int = node.getInt(CFG_KW_TWTG_INT, -1)
@@ -165,6 +197,11 @@ class Parser_TDMA_t(ParserBase_t):
 			timeWin.TwtgInterval= interval
 
 			timeWins.append(timeWin)
+
+		#SystemIntervalUS以下か
+		if total_duration > sysInterval:
+			#err:DurationUSがSystemIntervalUSを越えている
+			AppError(f'{som_name}:Total duration({total_duration}) must be <= {CFG_KW_SYS_INTERVAL}({sysInterval})')
 
 		return timeWins
 

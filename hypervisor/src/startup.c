@@ -16,7 +16,7 @@ extern void EBaseIDLE(void);
  *  起動処理
  */
 void
-StartHV(uint32 mode)
+StartHV(ID SystemModeID)
 {
     uint  coreid = get_my_coreid();
     uint  my_scyctim_intno = SCYCTIM_INTNO(coreid);
@@ -33,10 +33,27 @@ StartHV(uint32 mode)
     barrier_sync(1);
 
     /*
-     * 次回起動用に同期用変数を0に初期化
+     *  マスターコアの初期化
      */
     if (is_leader()) {
+        /* 次回起動用に同期用変数を0に初期化 */
         bootsync = 0;
+
+#if TNUM_SUPPORT_CORE > 1
+        giant_lock = 0;
+#endif /* TNUM_SUPPORT_CORE > 1 */
+
+        /* システム動作モード関連の初期化 */
+        p_global_cursom = NULL;
+        if (VALID_SOMID(SystemModeID)) {
+            p_global_nxtsom = get_sominib(SystemModeID);
+        }
+        else {
+            p_global_nxtsom = get_sominib(TMIN_SOMID);
+        }
+#if TNUM_SUPPORT_CORE > 1
+        scycprc_bitmap = 0;
+#endif /* TNUM_SUPPORT_CORE > 1 */
     }
 
     /*

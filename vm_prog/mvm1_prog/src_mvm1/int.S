@@ -232,23 +232,23 @@ call_ostm3:
 call_ostm4:
     movea OSTM4_INTNO,r0,r11
     cmp   r11,r6
-    bne   twtgint_717
+    bne   twtgint_547
     ei
     jarl  _ostm4_handler,lp
     di
 
-    /* タイムウィンドウトリガ割込み(717)の場合 */
-twtgint_717:
-    movea 717,r0,r11
+    /* タイムウィンドウトリガ割込み(547)の場合 */
+twtgint_547:
+    movea 547,r0,r11
     cmp   r11,r6
-    bne   twtgint_718
+    bne   twtgint_548
     ei
     jarl  _twtgint_handler,lp
     di
 
-    /* タイムウィンドウトリガ割込み(718)の場合 */
-twtgint_718:
-    movea 718,r0,r11
+    /* タイムウィンドウトリガ割込み(548)の場合 */
+twtgint_548:
+    movea 548,r0,r11
     cmp   r11,r6
     bne   int_handler_exit
     ei

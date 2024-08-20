@@ -339,22 +339,40 @@ HVの例を以下に示す．
      - 説明
        - VMに割り付ける割り込みの割込み番号のリスト
      - エラーチェック
-       - 0から31の値が指定されているか．[ER014]
          - NumberOfINTC2Interrupt未満であるか．[ER015]
          - HVや他のVMで指定されていないか．[ER016]
-		 - 重複した番号を指定していないか．[ER034]
+         - 重複した番号を指定していないか．[ER034]
 
 
 ## TDMA
 
-	TDMA:
- 		SystemIntervalUS: 10000000 #システム周期
- 		ScheduleTable:
-  			- CoreID: 0
-    		  TimeWindow:   
-			  - {Type: VM, VMName: VM0_0, DurationUS: 4000000, TwtgIntNo: 707, TwtgIntInterval: 1}
-			  - {Type: VM, VMName: VM0_1, DurationUS: 2000000, TwtgIntNo: 708, TwtgIntInterval: 2} 
-			  - {Type: HV,              DurationUS: 1500000, TwtgIntNo: 709, TwtgIntInterval: 1}
+    TDMA:
+    SystemIntervalUS: 10000000
+    SystemOperationMode:
+      - Name : SOM1
+        ScheduleTable:
+        - CoreID: 0
+          TimeWindow:
+          - {Type: VM, VMName: VM0_0, DurationUS: 4000000, TwtgIntNo: 707, TwtgIntInterval: 1}
+          - {Type: VM, VMName: VM0_1, DurationUS: 2000000, TwtgIntNo: 708, TwtgIntInterval: 2}
+          - {Type: HV,                DurationUS: 1500000, TwtgIntNo: 709, TwtgIntInterval: 1}
+        - CoreID: 1
+          TimeWindow:
+          - {Type: VM, VMName: VM1_0, DurationUS: 4000001, TwtgIntNo: 717, TwtgIntInterval: 1}
+          - {Type: VM, VMName: VM1_1, DurationUS: 2000001, TwtgIntNo: 718, TwtgIntInterval: 2}
+          - {Type: HV,                DurationUS: 1500001, TwtgIntNo: 719, TwtgIntInterval: 1}
+      - Name : SOM2
+        ScheduleTable:
+        - CoreID: 0
+          TimeWindow:
+          - {Type: VM, VMName: VM0_1, DurationUS: 2000000, TwtgIntNo: 708, TwtgIntInterval: 2}
+          - {Type: VM, VMName: VM0_0, DurationUS: 4000000, TwtgIntNo: 707, TwtgIntInterval: 1}
+          - {Type: HV,                DurationUS: 1500000, TwtgIntNo: 709, TwtgIntInterval: 1}
+        - CoreID: 1
+          TimeWindow:
+          - {Type: VM, VMName: VM1_1, DurationUS: 2000001, TwtgIntNo: 718, TwtgIntInterval: 2}
+          - {Type: VM, VMName: VM1_0, DurationUS: 4000001, TwtgIntNo: 717, TwtgIntInterval: 1}
+          - {Type: HV,                DurationUS: 1500001, TwtgIntNo: 719, TwtgIntInterval: 1}
 
 ### TDMA
 - TDMAスケジューリング定義のトップキー
@@ -364,7 +382,16 @@ HVの例を以下に示す．
 - 説明
   - システム周期マイクロ秒で指定．
   
-### ScheduleTable
+### SystemOperationMode
+- 値 : システム動作モードのリスト
+
+#### Name
+- 値 : 文字列
+- 説明
+   - システム動作モードの名前を指定する．
+   - エラーチェック
+       - 他の定義と重複していないか．[ER008]
+#### ScheduleTable
 - 値 : スケジュールテーブル定義のリスト
 - 説明
   - スケジュールテーブル定義のリストを記載する．
@@ -402,7 +429,7 @@ HVの例を以下に示す．
        - 説明
           - タイムウィンドウの時間を指定する．
        - エラーチェック
-          - SupportCoreIDsで指定されたコアIDであるか．[ER024]	
+          - SystemIntervalUSで定義した値を超えていないか．[ER042]
     - TwtgIntNo
        - 値 : 数値
        - 説明
@@ -529,5 +556,5 @@ HVの例を以下に示す．
   
 
 # 更新履歴
-
-# 変更点
+- 2023/12/19
+	- システム動作モードの導入．

@@ -139,11 +139,6 @@ const uint hvint0_taud0no[] = {
 };
 
 /*
- *  ハイパーバイザーの動作モード
- */
-#define HV_MODE        1
-
-/*
  *  HVユーザーメイン関数
  */
 void
@@ -166,7 +161,7 @@ rh850_main(void)
     /*
      *  ハイパーバイザーの呼び出し
      */    
-    StartHV(HV_MODE);
+    StartHV(SOMID_SOM1);
 }
 
 /*

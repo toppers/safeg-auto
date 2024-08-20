@@ -22,7 +22,7 @@ HV:
      StackHVTW : .cbss0
     Interrupt : #HV割込み
      - {IntNo : 380, IntHandler : hvint0_handler, Priority : 9, Enable : true}
-     - {IntNo : 709, IntHandler : twdint_handler, Priority : 9, Enable : true}
+     - {IntNo : 546, IntHandler : twdint_handler, Priority : 9, Enable : true}
    
 VM:
  - Name:      VM1
@@ -41,7 +41,7 @@ VM:
     - 364 #TAUJ1I0_INTNO
     - 202 #OSTM3_INTNO
     - 199 #OSTM0_INTNO
-    - 707
+    - 544
  - Name:      VM2
    CoreID:    0
    RestBase:  0x00200000
@@ -58,16 +58,18 @@ VM:
     - 438 #RLIN35_RX_INTNO
     - 372 #TAUJ3I0_INTNO
     - 200 #OSTM1_INTNO
-    - 708
+    - 545
 
 TDMA:
  SystemIntervalUS: 10000000
- ScheduleTable:
-  - CoreID: 0
-    TimeWindow:
-     - {Type: VM, VMName: VM1, DurationUS: 4000000, TwtgIntNo: 707, TwtgIntInterval: 1}
-     - {Type: VM, VMName: VM2, DurationUS: 4000000, TwtgIntNo: 708, TwtgIntInterval: 2} #TwtgIntNo は省略可能，TwtgIntInterval省略時は1
-     - {Type: HV,              DurationUS: 1000000, TwtgIntNo: 709, TwtgIntInterval: 1} #HVタイムウィンドウの場合はVMIDなし
+ SystemOperationMode:
+  - Name : SOM1
+    ScheduleTable:
+    - CoreID: 0
+      TimeWindow:
+        - {Type: VM, VMName: VM1, DurationUS: 4000000, TwtgIntNo: 544, TwtgIntInterval: 1}
+        - {Type: VM, VMName: VM2, DurationUS: 4000000, TwtgIntNo: 545, TwtgIntInterval: 2} #TwtgIntNo は省略可能，TwtgIntInterval省略時は1
+        - {Type: HV,              DurationUS: 1000000, TwtgIntNo: 546, TwtgIntInterval: 1} #HVタイムウィンドウの場合はVMIDなし
 
 VCOM:
   StateVariable:

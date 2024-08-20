@@ -92,6 +92,20 @@ def Generate(file: TextIO, cfg: Cfg_t):
 	defs.PutSNL('};')
 	defs.PutNL()
 
+	#VM割込初期化ブロックテーブル
+	for vm in cfg.VMs.values():
+		defs.PutSNL(f'const VMINTINIB vmintinib_table_{vm.Name}[{vm.Name}_TNUM_VMINT] = {{')
+		defs.TabUp()
+		for no in vm.Ints:
+			defs.PutTabSNL('{')
+			defs.TabUp()
+			defs.PutTabSNL(f'{no:>3},')
+			defs.TabDown()
+			defs.PutTabSNL('},')
+		defs.TabDown()
+		defs.PutSNL('};')
+	defs.PutNL()
+
 	#VM初期化ブロックテーブル
 	defs.PutSNL('const VMINIB vminib_table[TNUM_VM] = {')
 	defs.TabUp()
@@ -102,7 +116,9 @@ def Generate(file: TextIO, cfg: Cfg_t):
 		defs.PutTabSNL(f'0x{vm.ResetBase:>08X},')
 		defs.PutTabSNL(f'{vm.defGPID()},')
 		defs.PutTabSNL(f'{vm.Name}_SPIDLIST,')
-		defs.PutTabSNL(f'{vm.Name}_SPID')
+		defs.PutTabSNL(f'{vm.Name}_SPID,')
+		defs.PutTabSNL(f'{vm.Name}_TNUM_VMINT,')
+		defs.PutTabSNL(f'vmintinib_table_{vm.Name}')
 		defs.TabDown()
 		defs.PutTabSNL('},')
 	defs.TabDown()
@@ -124,60 +140,71 @@ def Generate(file: TextIO, cfg: Cfg_t):
 	defs.PutSNL('};')
 	defs.PutNL()
 
-	#VM割込初期化ブロックテーブル
-	defs.PutSNL('const VMINTINIB vmintinib_table[TNUM_VMINT] = {')
-	for vm in cfg.VMs.values():
-		for no in vm.Ints:
-			defs.PutTabSNL(f'{{{no:>3}, {vm.defVMID()}, {vm.Core.defIDName()}}},', 1)
-	defs.PutSNL('};')
-	defs.PutNL()
-
 	#TWTG割込カウンタ
 	for core in cfg.HV.Cores.values():
 		defs.PutSNL(f'uint32 twtgcnt_core{core.ID}[TNUM_TW_CORE{core.ID}];')
 	defs.PutNL()
 
+	twtgcnt = {};
+	for core in cfg.HV.Cores.values():
+		twtgcnt[core.ID] = 0;
+	
 	#TW初期化ブロック
-	for coreID, sched in cfg.TDMA.Schedules.items():
-		defs.PutSNL(f'const TWDINIB twdinib_core{coreID}[] = {{')
-		defs.TabUp()
-		for i, tw in enumerate(sched.TimeWins):
-			defs.PutTabSNL('{')
+	for somID, som in cfg.TDMA.SystemOperationModes.items():
+		for coreID, sched in som.Schedules.items():
+			defs.PutSNL(f'const TWDINIB twdinib_{somID}_core{coreID}[] = {{')
 			defs.TabUp()
-			if tw.type == PEType_t.VM:
-				defs.PutTabSNL(f'{tw.VM.defVMID()},')
-			elif tw.type == PEType_t.HV:
-				defs.PutTabSNL( 'VMID_HVTWD,')
-			defs.PutTabSNL(f'TWDTIMER_TO_CYC({tw.Duration}U),')
-			defs.PutTabSNL(f'{tw.TwtgInt if tw.TwtgInt > 0 else "0xFFFFFFFF"},')
-			defs.PutTabSNL(f'{tw.TwtgInterval},')
-			defs.PutTabSNL(f'&twtgcnt_core{coreID}[{i}]')
+			for i, tw in enumerate(sched.TimeWins):
+				defs.PutTabSNL('{')
+				defs.TabUp()
+				if tw.type == PEType_t.VM:
+					defs.PutTabSNL(f'{tw.VM.defVMID()},')
+				elif tw.type == PEType_t.HV:
+					defs.PutTabSNL( 'VMID_HVTWD,')
+				defs.PutTabSNL(f'TWDTIMER_TO_CYC({tw.Duration}U),')
+				defs.PutTabSNL(f'{tw.TwtgInt if tw.TwtgInt > 0 else "0xFFFFFFFF"},')
+				defs.PutTabSNL(f'{tw.TwtgInterval},')
+				defs.PutTabSNL(f'&twtgcnt_core{coreID}[{twtgcnt[coreID]}]')
+				twtgcnt[coreID] += 1
+				defs.TabDown()
+				defs.PutTabSNL('},')
+			defs.PutTabSNL('{')
+			defs.PutTabSNL('    VMID_IDLE,')
+			defs.PutTabSNL('    0,')
+			defs.PutTabSNL('    0xFFFFFFFF,')
+			defs.PutTabSNL('    0,')
+			defs.PutTabSNL('    0')
+			defs.PutTabSNL('}')
 			defs.TabDown()
-			defs.PutTabSNL('},')
-		defs.PutTabSNL('{')
-		defs.PutTabSNL('	VMID_IDLE,')
-		defs.PutTabSNL('	0,')
-		defs.PutTabSNL('	0xFFFFFFFF,')
-		defs.PutTabSNL('	0,')
-		defs.PutTabSNL('	0')
-		defs.PutTabSNL('}')
-		defs.TabDown()
-		defs.PutSNL('};')
-		defs.PutNL()
+			defs.PutSNL('};')
+			defs.PutNL()
 
-	#テーブル
-	defs.PutSNL('const TWDINIB* const p_twdinib_table[TNUM_PHYS_CORE] = {')
+	#SOMINIBテーブル
+	defs.PutSNL('const SOMINIB	sominib_table[] = {')
 	defs.TabUp()
-	scheds = [s for s in cfg.TDMA.Schedules.values()]
-	for i in range(TNUM_PHYS_CORE):
-		if i == TNUM_PHYS_CORE_HALF:
-			defs.PutTabSNL('#if TNUM_PHYS_CORE == 4', 0)
-		if i < len(cfg.TDMA.Schedules):
-			defs.PutTabSNL(f'twdinib_core{scheds[i].Core.ID},')
-		else:
-			defs.PutTabSNL('NULL,')
+	for somID, som in cfg.TDMA.SystemOperationModes.items():
+		defs.PutTabSNL('{')
+		#p_twdinib
+		defs.TabUp()
+		defs.PutTabSNL('{')
+		cores = [f for f in cfg.HV.Cores.values()]
+		for i in range(TNUM_PHYS_CORE):
+			if i == TNUM_PHYS_CORE_HALF:
+				defs.PutTabSNL('#if TNUM_PHYS_CORE == 4', 0)
+			if i < len(cfg.HV.Cores):
+				core = cores[i]
+				if (core.ID in som.Schedules):
+					defs.PutTabSNL(f'twdinib_{somID}_core{core.ID},')
+				else:
+					defs.PutTabSNL('NULL,')
+			else:
+				defs.PutTabSNL('NULL,')
+		defs.PutSNL('#endif /* TNUM_PHYS_CORE == 4 */')		
+		defs.PutTabSNL('},')
+		defs.TabDown()
+
+		defs.PutTabSNL('},')
 	defs.TabDown()
-	defs.PutSNL('#endif /* TNUM_PHYS_CORE == 4 */')
 	defs.PutSNL('};')
 	defs.PutNL()
 

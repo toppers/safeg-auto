@@ -55,6 +55,7 @@ sysctimer_init(uint32 coreid)
 LOCAL_INLINE void
 sysctimer_start(uint32 coreid, uint32 duration)
 {
+    duration = duration != 0? (duration - 1) : 0;
     tptmi_start(SCYCTIM_TPTMI_NO, duration);
 }
 
@@ -123,6 +124,7 @@ twdtimer_init(uint32 coreid)
 LOCAL_INLINE void
 twdtimer_start(uint32 coreid, uint32 duration)
 {
+    duration = duration != 0? (duration - 1) : 0;
     tptmu_set_cmp(0, duration);
     tptmu_start(TWDTIM_TPTMU_NO);
 }
