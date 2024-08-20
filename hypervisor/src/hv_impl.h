@@ -301,6 +301,7 @@ struct vm_control_block {
     HEMPUINIB const *p_hempuinib;    /* MPU初期化ブロックへのポインタ */
 #ifdef SUPPORT_SBUF
     HEMPUINIB sbufmpu[TNUM_HEMPU_SBUF];
+    uint32    sbuf_fmpubit;          /* 空きMPU領域のビットマップ */
 #endif /* SUPPORT_SBUF */
 };
 

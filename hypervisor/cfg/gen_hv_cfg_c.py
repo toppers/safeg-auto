@@ -420,7 +420,7 @@ def Generate(file: TextIO, cfg: Cfg_t):
 			for vm in sbuf.AccesVMs:
 				accessvm |= (1 << (vm.ID - 1))
 
-			defs.PutTabSNL(f'{{(uint8*)sbuf_{sbuf.Name}, (uint8*)(&sbuf_{sbuf.Name}[VMCOM_COUNT_SZ({sbuf.Size:>4}, sizeof(uintptr))-1]), 0x{accessvm:>02X}, 0x{impubit:>08X}}},')
+			defs.PutTabSNL(f'{{(uint8*)sbuf_{sbuf.Name}, (uint8*)(&sbuf_{sbuf.Name}[VMCOM_COUNT_SZ({sbuf.Size:>4}, sizeof(uintptr))-1]), 0x{accessvm:>02X}}},')
 		defs.TabDown()
 		defs.PutSNL('};')
 		defs.PutNL()

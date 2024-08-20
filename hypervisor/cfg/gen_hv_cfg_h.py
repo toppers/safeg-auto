@@ -156,6 +156,10 @@ def Generate(file: TextIO, cfg: Cfg_t):
 			defs.PutNL()
 			defs.PutSNL(outDefine(f'TMIN_HEMPU_SBUF', f'{cfg.HV.HostEntryMPUs}'))
 			defs.PutSNL(outDefine(f'TMAX_HEMPU_SBUF', f'{cfg.HV.HostEntryMPUs + cfg.VCOM.SBufs.NumInsts() - 1}'))
+			impubit = 0
+			for i in range(cfg.HV.HostEntryMPUs, cfg.HV.HostEntryMPUs + cfg.VCOM.SBufs.NumInsts()):
+				impubit |= (1 << i)
+			defs.PutSNL(outDefine(f'TBIT_HEMPU_SBUF', f'0x{impubit:>08X}'))
 			defs.PutNL()
 
 	#########################

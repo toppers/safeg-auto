@@ -97,6 +97,8 @@ rh850_main(void)
     int ret;
     uint32 timeleft;
     uint8 *p_data;
+    uint8 *p_data1;
+    uint8 *p_data2;
     int pre_twtgint_cnt;
     
     twtgint_cnt = 0;
@@ -241,7 +243,7 @@ rh850_main(void)
     /*
      *  共有バッファのテスト
      */
-    
+
     /*
      *  共有バッファ異常系のテスト
      */
@@ -288,6 +290,35 @@ rh850_main(void)
 
     CHECK_EXP(71,  ReleaseSharedBuffer(VALID_SBUFID2) == E_OK);
 
+    /* 共有バッファテスト9 : 複数のバッファへアクセス可能か */
+    CHECK_EXP(72,  AcquireSharedBuffer(VALID_SBUFID, (void*)&p_data1) == E_OK);
+    CHECK_EXP(73,  AcquireSharedBuffer(VALID_SBUFID2, (void*)&p_data2) == E_OK);
+    for (loop = 0; loop < SBUF1_SIZE; loop++) {
+        *(p_data1 + loop) = loop;
+    }
+    for (loop = 0; loop < SBUF2_SIZE; loop++) {
+        *(p_data2 + loop) = loop;
+    }
+    CHECK_EXP(74,  ReleaseSharedBuffer(VALID_SBUFID) == E_OK);
+    CHECK_EXP(75,  ReleaseSharedBuffer(VALID_SBUFID2) == E_OK);
+    
+    /* 共有バッファテスト9 : 複数のバッファへのアクセスが1周期後も可能か */
+    CHECK_EXP(76,  AcquireSharedBuffer(VALID_SBUFID, (void*)&p_data1) == E_OK);
+    CHECK_EXP(77,  AcquireSharedBuffer(VALID_SBUFID2, (void*)&p_data2) == E_OK);
+
+    pre_twtgint_cnt = twtgint_cnt;
+    while(twtgint_cnt == pre_twtgint_cnt);
+    
+    for (loop = 0; loop < SBUF1_SIZE; loop++) {
+        *(p_data1 + loop) = loop;
+    }
+    for (loop = 0; loop < SBUF2_SIZE; loop++) {
+        *(p_data2 + loop) = loop;
+    }
+    CHECK_EXP(78,  ReleaseSharedBuffer(VALID_SBUFID) == E_OK);
+    CHECK_EXP(79,  ReleaseSharedBuffer(VALID_SBUFID2) == E_OK);
+    
+    
     if (error == 0) {
         syslog(VMNAME " : pass all test!\n\n");
     }

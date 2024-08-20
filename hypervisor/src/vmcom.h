@@ -134,7 +134,6 @@ typedef struct sharedbuffer_initialization_block {
     uint8   *bufmpla;   /* バッファの開始アドレス(4byte境界) */    
     uint8   *bufmpua;   /* バッファのリミットアドレス(4byte境界) */    
     uint    accessvm;   /* アクセス可能なVMのビットマップ */
-    uint32  impubit;    /* 空きMPU領域のビットマップの初期値 */
 } SBUFINIB;
 
 /*
@@ -145,7 +144,6 @@ typedef struct sharedbuffer_control_block {
     ID       acquirevmid;          /* バッファ取得中のVMのID */
     uint32   lock;                 /* ロック変数 */
     uint32   mpidx;                /* 取得したVMの使用したMPUエントリ */
-    uint32   mpubit;               /* 空きMPU領域のビットマップ */
 } SBUFCB;
 
 /*

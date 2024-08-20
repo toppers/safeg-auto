@@ -164,6 +164,7 @@ hv_init(void)
             for (sbuflp = 0; sbuflp < TNUM_HEMPU_SBUF; sbuflp++) {
                 p_vmcb->sbufmpu[sbuflp].mpat = 0U;
             }
+            p_vmcb->sbuf_fmpubit = TBIT_HEMPU_SBUF;
 #endif /* SUPPORT_SBUF */
 
             /*

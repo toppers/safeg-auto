@@ -514,7 +514,6 @@ initialize_sharedbuffer(void)
         p_sbufcb->acquirevmid = 0U;
         p_sbufcb->lock = 0U;
         p_sbufcb->mpidx = 0U;
-        p_sbufcb->mpubit = p_sbufcb->p_sbufinib->impubit;
     }
 }
 
@@ -543,9 +542,9 @@ AcquireSharedBuffer(uint SBufID, void **BufPtr)
         *BufPtr = (void*)p_sbufcb->p_sbufinib->bufmpla;
         p_sbufcb->acquirevmid = VMID(p_my_ccb->p_runvm);
         /* MPUの空きエントリを探す */
-        mpidx = __SCH1R(p_sbufcb->mpubit) - 1;
+        mpidx = __SCH1R(p_my_ccb->p_runvm->sbuf_fmpubit) - 1;
         set_mpidx(mpidx);
-        p_sbufcb->mpubit |= 1 << mpidx;
+        p_my_ccb->p_runvm->sbuf_fmpubit &= ~(1U << mpidx);
         set_mpla((uint32)p_sbufcb->p_sbufinib->bufmpla);
         set_mpua((uint32)p_sbufcb->p_sbufinib->bufmpua);
         set_mpat(MPU_E_MASK|MPU_RAM|MPU_WG_MASK|MPU_RG_MASK);
@@ -580,6 +579,7 @@ ReleaseSharedBuffer(uint SBufID)
         p_sbufcb->acquirevmid = 0;
         set_mpidx(p_sbufcb->mpidx);
         set_mpat(0);  /* Disable */
+        p_my_ccb->p_runvm->sbuf_fmpubit |= 1U << p_sbufcb->mpidx;
     }
     vmcom_release_lock(&(p_sbufcb->lock));
 
