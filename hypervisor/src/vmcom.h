@@ -179,23 +179,23 @@ extern void vmcom_init(void);
  *  状態変数API
  */
 extern void initialize_statevariable(void);
-extern int ReadStateVariable(uint SverID, void *Variable);
-extern int WriteStateVariable(uint SverID, const void *Variable);
-extern int DeactivateStateVariable(uint SverID);
+extern ER ReadStateVariable(uint SverID, void *Variable);
+extern ER WriteStateVariable(uint SverID, const void *Variable);
+extern ER DeactivateStateVariable(uint SverID);
 
 /*
  *  メッセージキューAPI
  */
-extern int ReadMessageQueue(uint MsgqID, void *WritePtr);
-extern int WriteMessageQueue(uint MsgqID, const void *ReadPtr, uint MsgSize);
-extern int DeactivateMessageQueue(uint MsgqID);
+extern ER ReadMessageQueue(uint MsgqID, void *WritePtr);
+extern ER WriteMessageQueue(uint MsgqID, const void *ReadPtr, uint MsgSize);
+extern ER DeactivateMessageQueue(uint MsgqID);
 
 #ifdef SUPPORT_SBUF
 /*
  *  共有バッファAPI
  */
-extern int AcquireSharedBuffer(uint SBufID, void **BufPtr);
-extern int ReleaseSharedBuffer(uint SBufID);
+extern ER AcquireSharedBuffer(uint SBufID, void **BufPtr);
+extern ER ReleaseSharedBuffer(uint SBufID);
 #endif /* SUPPORT_SBUF */
 #endif /* TOPPERS_MACRO_ONLY */
 

@@ -192,12 +192,12 @@ initialize_statevariable(void)
 /*
  *  状態変への書き込み
  */
-int
+ER
 WriteStateVariable(uint SvarID, const void *Variable)
 {
     SVARCB  *p_svarcb;
-    int ercd = E_OK;
-    CCB *p_my_ccb = get_my_ccb();
+    ER   ercd = E_OK;
+    CCB  *p_my_ccb = get_my_ccb();
 
     CHECK_ID(VALID_SVARID(SvarID));
     p_svarcb = get_svarcb(SvarID);
@@ -219,11 +219,11 @@ WriteStateVariable(uint SvarID, const void *Variable)
 /*
  *  状態変数からの読込み
  */
-int
+ER
 ReadStateVariable(uint SvarID, void *Variable) {
     SVARCB  *p_svarcb;
-    int ercd = E_OK;
-    CCB *p_my_ccb = get_my_ccb();
+    ER   ercd = E_OK;
+    CCB  *p_my_ccb = get_my_ccb();
 
     CHECK_ID(VALID_SVARID(SvarID));
     p_svarcb = get_svarcb(SvarID);
@@ -248,11 +248,11 @@ ReadStateVariable(uint SvarID, void *Variable) {
 /*
  *  状態変数の状態をディアクティブに変更
  */
-int
+ER
 DeactivateStateVariable(uint SvarID) {
     SVARCB  *p_svarcb;
-    int ercd = E_OK;
-    CCB *p_my_ccb = get_my_ccb();
+    ER   ercd = E_OK;
+    CCB  *p_my_ccb = get_my_ccb();
 
     CHECK_ID(VALID_SVARID(SvarID));
     p_svarcb = get_svarcb(SvarID);
@@ -391,11 +391,11 @@ dequeue_message(MSGQCB *p_msgqcb, void *msg)
     return(msgsz);
 }
 
-int
+ER
 WriteMessageQueue(uint MsgqID, const void *Message, uint MsgSize)
 {
     MSGQCB  *p_msgqcb;
-    int  ercd;
+    ER   ercd;
     CCB  *p_my_ccb = get_my_ccb();
 
     CHECK_ID(VALID_MSGQID(MsgqID));
@@ -421,11 +421,11 @@ WriteMessageQueue(uint MsgqID, const void *Message, uint MsgSize)
     return(ercd);
 }
 
-int
+ER
 ReadMessageQueue(uint MsgqID, void *Message)
 {
     MSGQCB  *p_msgqcb;
-    int  ercd = E_OK;
+    ER   ercd = E_OK;
     CCB  *p_my_ccb = get_my_ccb();
 
     CHECK_ID(VALID_MSGQID(MsgqID));
@@ -455,11 +455,11 @@ ReadMessageQueue(uint MsgqID, void *Message)
 /*
  *  メッセージキューの状態をディアクティブに変更
  */
-int
+ER
 DeactivateMessageQueue(uint MsgqID)
 {
     MSGQCB  *p_msgqcb;
-    int  ercd = E_OK;
+    ER   ercd = E_OK;
     CCB  *p_my_ccb = get_my_ccb();
 
     CHECK_ID(VALID_MSGQID(MsgqID));
@@ -521,11 +521,11 @@ initialize_sharedbuffer(void)
 /*
  *  バッファの取得
  */
-int
+ER
 AcquireSharedBuffer(uint SBufID, void **BufPtr)
 {
     SBUFCB  *p_sbufcb;
-    int  ercd = E_OK;
+    ER   ercd = E_OK;
     CCB  *p_my_ccb = get_my_ccb();
     int  mpidx;
 
@@ -560,11 +560,11 @@ AcquireSharedBuffer(uint SBufID, void **BufPtr)
 /*
  *  バッファの解放
  */
-int
+ER
 ReleaseSharedBuffer(uint SBufID)
 {
     SBUFCB  *p_sbufcb;
-    int  ercd = E_OK;
+    ER   ercd = E_OK;
     CCB  *p_my_ccb = get_my_ccb();
 
     CHECK_ID(VALID_SBUFID(SBufID));

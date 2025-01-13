@@ -7,15 +7,20 @@
 
 #ifndef TOPPERS_MACRO_ONLY
 
+/*
+ *  ゲスト処理・ユーザーホスト処理・ハイパーバイザー共通の定義
+ */
+#include "../include/common_def.h"
+
 typedef sint32 FunctionCodeType;
 
 /*
  *  サービスコール呼び出し用の関数
  */
-extern int cal_hvc_0(int fncd);
-extern int cal_hvc_1(int par1, int fncd);
-extern int cal_hvc_2(int par1, int par2, int fncd);
-extern int cal_hvc_3(int par1, int par2, int par3, int fncd);
+extern ER cal_hvc_0(int fncd);
+extern ER cal_hvc_1(int par1, int fncd);
+extern ER cal_hvc_2(int par1, int par2, int fncd);
+extern ER cal_hvc_3(int par1, int par2, int par3, int fncd);
 
 #define CAL_HVC_0(TYPE, FNCD) cal_hvc_0((int)((FunctionCodeType)FNCD))
 

@@ -82,12 +82,12 @@ ivccom_enable_int(uint psw)
 /*
  *  IVC状態変への書き込み
  */
-int
+ER
 WriteIVCStateVariable(uint IVCSvarID, const void *Variable)
 {
     const IVCSVARINIB  *p_ivcsvarinib;
-    int ercd = E_OK;
-    uint psw;
+    ER    ercd = E_OK;
+    uint  psw;
 
     CHECK_ID(VALID_IVCSVARID(IVCSvarID));
     p_ivcsvarinib = get_ivcsvarinib(IVCSvarID);
@@ -121,11 +121,11 @@ WriteIVCStateVariable(uint IVCSvarID, const void *Variable)
 /*
  *  状態変数からの読込み
  */
-int
+ER
 ReadIVCStateVariable(uint IVCSvarID, void *Variable) {
     const IVCSVARINIB  *p_ivcsvarinib;
-    int ercd = E_OK;
-    uint psw;
+    ER    ercd = E_OK;
+    uint  psw;
 
     CHECK_ID(VALID_IVCSVARID(IVCSvarID));
     p_ivcsvarinib = get_ivcsvarinib(IVCSvarID);
@@ -154,11 +154,11 @@ ReadIVCStateVariable(uint IVCSvarID, void *Variable) {
 /*
  *  状態変数の状態をディアクティブに変更
  */
-int
+ER
 DeactivateIVCStateVariable(uint IVCSvarID) {
     const IVCSVARINIB  *p_ivcsvarinib;
-    int ercd = E_OK;
-    uint psw;
+    ER    ercd = E_OK;
+    uint  psw;
 
     CHECK_ID(VALID_IVCSVARID(IVCSvarID));
     p_ivcsvarinib = get_ivcsvarinib(IVCSvarID);
@@ -281,12 +281,12 @@ dequeue_message(const IVCMSGQINIB *p_ivcmsgqinib, void *msg)
     return(msgsz);
 }
 
-int
+ER
 WriteIVCMessageQueue(uint IVCMsgqID, const void *Message, uint MsgSize)
 {
     const IVCMSGQINIB    *p_ivcmsgqinib;
-    int ercd;
-    uint psw;
+    ER    ercd;
+    uint  psw;
 
     CHECK_ID(VALID_IVCMSGQID(IVCMsgqID));
     p_ivcmsgqinib = get_ivcmsgqinib(IVCMsgqID);
@@ -314,12 +314,12 @@ WriteIVCMessageQueue(uint IVCMsgqID, const void *Message, uint MsgSize)
     return(ercd);
 }
 
-int
+ER
 ReadIVCMessageQueue(uint IVCMsgqID, void *Message)
 {
     const IVCMSGQINIB    *p_ivcmsgqinib;
-    int ercd = E_OK;
-    uint psw;
+    ER    ercd = E_OK;
+    uint  psw;
 
     CHECK_ID(VALID_IVCMSGQID(IVCMsgqID));
     p_ivcmsgqinib = get_ivcmsgqinib(IVCMsgqID);
@@ -351,12 +351,12 @@ ReadIVCMessageQueue(uint IVCMsgqID, void *Message)
 /*
  *  メッセージキューの状態をディアクティブに変更
  */
-int
+ER
 DeactivateIVCMessageQueue(uint IVCMsgqID)
 {
     const IVCMSGQINIB    *p_ivcmsgqinib;
-    int ercd = E_OK;
-    uint psw;
+    ER    ercd = E_OK;
+    uint  psw;
 
     CHECK_ID(VALID_IVCMSGQID(IVCMsgqID));
     p_ivcmsgqinib = get_ivcmsgqinib(IVCMsgqID);
@@ -394,12 +394,12 @@ DeactivateIVCMessageQueue(uint IVCMsgqID)
 /*
  *  IVCバッファの取得
  */
-int
+ER
 AcquireIVCbuf(uint IVCbufID, void **BufPtr)
 {
     const IVCBUFINIB    *p_ivcbufinib;
-    int ercd = E_OK;
-    uint psw;
+    ER    ercd = E_OK;
+    uint  psw;
 
     CHECK_ID(VALID_IVCBUFID(IVCbufID));
     p_ivcbufinib = get_ivcbufinib(IVCbufID);
@@ -422,12 +422,12 @@ AcquireIVCbuf(uint IVCbufID, void **BufPtr)
 /*
  *  IVCバッファの開放
  */
-int
+ER
 ReleaseIVCbuf(uint IVCbufID)
 {
     const IVCBUFINIB    *p_ivcbufinib;
-    int ercd = E_OK;
-    uint psw;
+    ER    ercd = E_OK;
+    uint  psw;
 
     CHECK_ID(VALID_IVCBUFID(IVCbufID));
     p_ivcbufinib = get_ivcbufinib(IVCbufID);

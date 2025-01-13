@@ -17,7 +17,7 @@
 /*
  *  型定義
  */
-typedef int ER;    /* エラーコード */
+typedef unsigned char ER;    /* エラーコード */
 typedef int ID;    /* オブジェクトのID番号 */
 
 #endif /* TOPPERS_MACRO_ONLY */
@@ -28,13 +28,13 @@ typedef int ID;    /* オブジェクトのID番号 */
 #ifndef E_OK
 #define E_OK    (0)     /* 正常終了 */
 #endif /* E_OK */
-#define E_ID    (-1)    /* ID番号不正 */
-#define E_OBJ   (-2)    /* オブジェクト状態エラー */
-#define E_BUF   (-3)    /* バッファ状態エラー */
-#define E_MACV  (-4)    /* メモリアクセス違反 */
-#define E_OACV  (-5)    /* オブジェクトアクセス違反 */
-#define E_PAR   (-6)    /* パラメータエラー */
-#define E_CTX   (-7)    /* コンテキストエラー */
+#define E_ID    (1)    /* ID番号不正 */
+#define E_OBJ   (2)    /* オブジェクト状態エラー */
+#define E_BUF   (3)    /* バッファ状態エラー */
+#define E_MACV  (4)    /* メモリアクセス違反 */
+#define E_OACV  (5)    /* オブジェクトアクセス違反 */
+#define E_PAR   (6)    /* パラメータエラー */
+#define E_CTX   (7)    /* コンテキストエラー */
 
 #endif /* _COMMON_DEF_H */
 
